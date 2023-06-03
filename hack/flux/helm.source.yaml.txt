@@ -1,0 +1,12 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: SOURCE_NAME
+  namespace: flux-system
+spec:
+  #type: oci
+  interval: 1m0s
+  url: SOURCE_URL
+  #secretRef:
+  #  name: SOURCE_CREDS_SECRET_NAME

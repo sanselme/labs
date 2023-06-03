@@ -1,0 +1,17 @@
+# Add 'repo' label to any root file changes
+repo:
+  - "*"
+
+# Add 'github-actions' label to any changes in the .github directory
+github-actions:
+  - .github/*.yml
+  - .github/workflows/*
+  - .github/workflows/*/**
+
+# Add 'devcontainer' label to files in the .devcontainer directory
+# and any file with the .docker directory
+devcontainer:
+  - .devcontainer/*
+  - .devcontainer/**/*
+  - .docker/*
+  - .docker/**/*

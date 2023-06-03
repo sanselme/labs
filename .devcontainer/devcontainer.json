@@ -18,5 +18,5 @@
     }
   },
   "forwardPorts": [6443, 8080, 8443],
-  "postCreateCommand": "${containerWorkspaceFolder}/cmd/run.sh"
+  "postCreateCommand": "${containerWorkspaceFolder}/tools/setup-vscode.sh"
 }

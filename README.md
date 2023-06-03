@@ -1,5 +1,20 @@
 # Readme
 
+[![OpenSSF Scorecard][ossf-score-badge]][ossf-score-link]
+[![Contiuos Integration][ci-badge]][ci-link]
+[![Review][review-badge]][review-link]
+[![Releases][releases-badge]][releases-link]
+
+[ossf-score-badge]: https://api.securityscorecards.dev/projects/github.com/sanselme/labs/badge
+[ossf-score-link]: https://securityscorecards.dev/viewer/?uri=github.com/sanselme/labs
+[ci-badge]: https://github.com/sanselme/labs/actions/workflows/cicd.yml/badge.svg
+[ci-link]: https://github.com/sanselme/labs/actions/workflows/cicd.yml
+[review-badge]: https://github.com/sanselme/labs/actions/workflows/review.yml/badge.svg
+[review-link]: https://github.com/sanselme/labs/actions/workflows/review.yml
+[releases-badge]: https://github.com/sanselme/labs/actions/workflows/release.yml/badge.svg
+[releases-link]: https://github.com/sanselme/labs/actions/workflows/release.yml
+
+---
 ## Usage
 
 Install packages:
@@ -11,25 +26,7 @@ Install packages:
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - [kustomize](https://kustomize.io/)
 
-Copy and edit environment variables: `cp -f .env.example build/site/${CLUSTER_NAME}/.env`.
-Load environment variables `source build/site/${CLUSTER_NAME}/.env`.
-
-Create a Kind cluster:
-
-```bash
-envsubst < conf/kind.yaml.tpl | kind create cluster --config -
-
-# Optionaly, install cilium:
-helm upgrade cilium cilium \
-  --install \
-  --repo https://helm.cilium.io/ \
-  --version 1.14.0-snapshot.4 \
-  --namespace kube-system \
-  --set operator.replicas=1 \
-  --set kubeProxyReplacement=strict \
-  --set l2announcements.enabled=true \
-  --set externalIPs.enabled=true
-```
+Create a Kubernetes cluster
 
 [Install flux](#install), generate and apply manifests:
 
@@ -58,22 +55,6 @@ kustomize build "./deployment/site/${CLUSTER_NAME}" \
 ```bash
 flux install --namespace=flux-system --components-extra="${FLUX_EXTRA_COMPONENTS}"
 ```
-
----
-
-[![OpenSSF Scorecard][ossf-score-badge]][ossf-score-link]
-[![Contiuos Integration][ci-badge]][ci-link]
-[![Review][review-badge]][review-link]
-[![Releases][releases-badge]][releases-link]
-
-[ossf-score-badge]: https://api.securityscorecards.dev/projects/github.com/sanselme/labs/badge
-[ossf-score-link]: https://securityscorecards.dev/viewer/?uri=github.com/sanselme/labs
-[ci-badge]: https://github.com/sanselme/labs/actions/workflows/cicd.yml/badge.svg
-[ci-link]: https://github.com/sanselme/labs/actions/workflows/cicd.yml
-[review-badge]: https://github.com/sanselme/labs/actions/workflows/review.yml/badge.svg
-[review-link]: https://github.com/sanselme/labs/actions/workflows/review.yml
-[releases-badge]: https://github.com/sanselme/labs/actions/workflows/release.yml/badge.svg
-[releases-link]: https://github.com/sanselme/labs/actions/workflows/release.yml
 
 ---
 

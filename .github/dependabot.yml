@@ -13,6 +13,6 @@ updates:
 
   # Maintain dependencies for Docker
   - package-ecosystem: docker
-    directory: build/package/**
+    directory: build/package/*/*
     schedule:
       interval: weekly

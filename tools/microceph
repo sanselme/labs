@@ -1,0 +1,243 @@
+#!/bin/sh
+
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+set -eux
+
+# TODO: microceph
+# - install packages if necassaary
+# - install microceph if not installed
+# - init & bootstrap cluster
+# - add disks
+# - enable rgw
+# - enable dashboard
+# - create cephfs
+# - create rbd pool
+# - create bucket
+
+# install packages
+apt install -y \
+  ceph-common \
+  libcephfs2 \
+  nfs-ganesha \
+  nfs-ganesha-ceph \
+  python3-rbd
+
+# install microceph
+snap install microceph --channel=latest/edge
+ln -sf /var/snap/microceph/current/conf /etc/ceph
+
+# FIXME: enable microceph
+microceph init
+# microceph cluster bootstrap
+
+# configure ceph
+# ceph fs flag set enable_multiple true
+ceph config set osd osd_memory_target_autotune true
+ceph config set mon mon_allow_pool_delete true
+
+# single deployment mode
+# ceph config set mon mon_allow_pool_size_one true
+# ceph config set mgr mgr_standby_modules false
+# ceph config set osd osd_crush_chooseleaf_type 0
+# ceph config set osd osd_pool_default_size 2
+# ceph config set osd osd_pool_default_min_size 1
+# ceph health mute  POOL_NO_REDUNDANCY --sticky
+# ceph health mute  PG_AVAILABILITY --sticky
+
+# add disks
+for DISK in ${CEPH_DISKS}; do
+  microceph disk add "${DISK}" --wipe
+done
+# ceph osd pool set .mgr size 1 --yes-i-really-mean-it
+# ceph osd pool rm .mgr .mgr --yes-i-really-really-mean-it
+# ceph osd pool create .mgr --size 1
+# ceph osd pool application enable .mgr mgr
+
+# FIXME: enable rgw
+ceph osd pool create .rgw.root --size 1
+ceph osd pool create default.rgw.log --size 1
+ceph osd pool create default.rgw.control --size 1
+ceph osd pool create default.rgw.meta --size 1
+ceph osd pool create default.rgw.buckets.index --size 1
+
+ceph osd pool application enable .rgw.root rgw
+ceph osd pool application enable default.rgw.log rgw
+ceph osd pool application enable default.rgw.control rgw
+ceph osd pool application enable default.rgw.meta rgw
+ceph osd pool application enable default.rgw.buckets.index rgw
+
+microceph enable rgw
+
+radosgw-admin user create --uid="admin" --display-name="Administrator"
+radosgw-admin subuser create --uid="admin" --subuser="admin:swift" --access="full"
+radosgw-admin key create --subuser="admin:swift" --key-type="swift" --gen-secret
+
+# FIXME: enable dashboard
+ceph mgr module enable dashboard
+ceph dashboard create-self-signed-cert
+
+# ceph config set mgr mgr/dashboard/crt_file ${CEPH_DASHBOARD_CERTFILE}
+# ceph config set mgr mgr/dashboard/key_file ${CEPH_DASHBOARD_KEYFILE}
+ceph config set mgr mgr/dashboard/server_addr "${CEPH_DASHBOARD_ADDR}"
+ceph config set mgr mgr/dashboard/server_port 8443
+ceph config set mgr mgr/dashboard/ssl_server_port 8443
+ceph config set mgr mgr/telemetry/enabled false
+
+ceph dashboard set-rgw-api-ssl-verify false
+ceph dashboard set-iscsi-api-ssl-verification false
+
+tee /var/snap/microceph/common/ceph-dashboard-admin.txt <<EOF
+${CEPH_DASHBOARD_ADMIN_PASSWD:-changeme}
+EOF
+ceph dashboard ac-user-create admin -i /var/snap/microceph/common/ceph-dashboard-admin.txt administrator
+
+for feature in rbd mirroring cephfs rgw; do
+  ceph dashboard feature enable "${feature}"
+done
+ceph dashboard feature disable iscsi
+ceph dashboard feature disable nfs
+
+ceph dashboard set-rgw-credentials
+ceph dashboard set-rgw-api-admin-resource admin
+
+# create cephfs pool
+ceph osd pool create cephfs.cephfs.meta --size 1
+ceph osd pool create cephfs.cephfs.data --size 1
+
+ceph fs volume create cephfs
+ceph fs authorize cephfs client.cephfs / rw | tee /var/snap/microceph/current/conf/ceph.client.cephfs.keyring
+
+# create cephfs subvolume
+ceph fs subvolume create cephfs images
+ceph fs subvolume authorize cephfs images glance
+ceph auth get client.glance | head -n 2 | tee /var/snap/microstack/common/etc/glance/glance.conf.d/ceph.client.glance.keyring
+
+ceph fs subvolume create cephfs volumes
+ceph fs subvolume authorize cephfs volumes cinder
+ceph auth get client.cinder | head -n 2 | tee /var/snap/microstack/common/etc/cinder/cinder.conf.d/ceph.client.cinder.keyring
+
+ceph fs subvolume create cephfs backups
+ceph fs subvolume authorize cephfs backups cinder-backup
+ceph auth get client.cinder-backup | head -n 2 | tee /var/snap/microstack/common/etc/cinder/cinder.conf.d/ceph.client.cinder-backup.keyring
+
+ceph fs subvolume create cephfs vms
+ceph fs subvolume authorize cephfs vms nova
+ceph auth get client.nova | head -n 2 | tee /var/snap/microstack/common/etc/nova/nova.conf.d/ceph.client.nova.keyring
+
+ln -sf /var/snap/microstack/common/etc/glance/glance.conf.d/ceph.client.glance.keyring /etc/ceph/
+ln -sf /var/snap/microstack/common/etc/cinder/cinder.conf.d/ceph.client.cinder.keyring /etc/ceph/
+ln -sf /var/snap/microstack/common/etc/cinder/cinder.conf.d/ceph.client.cinder-backup.keyring /etc/ceph/
+ln -sf /var/snap/microstack/common/etc/nova/nova.conf.d/ceph.client.nova.keyring /etc/ceph/
+
+# mount cephfs
+GLANCE_PATH="$(ceph fs subvolume getpath cephfs images)"
+CINDER_PATH="$(ceph fs subvolume getpath cephfs volumes)"
+CINDER_BKP_PATH="$(ceph fs subvolume getpath cephfs backups)"
+NOVA_PATH="$(ceph fs subvolume getpath cephfs vms)"
+
+tee -a /etc/fstab <<EOF
+
+# microceph
+${CEPH_MON_ADDR}:${GLANCE_PATH} /var/snap/microstack/common/lib/images ceph name=glance,_netdev 0 0
+${CEPH_MON_ADDR}:${CINDER_PATH} /var/snap/microstack/common/lib/volumes ceph name=cinder,_netdev 0 0
+${CEPH_MON_ADDR}:${CINDER_BKP_PATH} /var/snap/microstack/common/lib/qemu/snapshots ceph name=cinder-backup,_netdev 0 0
+${CEPH_MON_ADDR}:${NOVA_PATH} /var/snap/microstack/common/lib/instances ceph name=nova,_netdev 0 0
+EOF
+
+# create kubernetes ceph-csi pool
+ceph osd pool create kubernetes --size 1
+
+rbd pool init kubernetes
+ceph auth get-or-create client.kubernetes mon 'profile rbd' osd 'profile rbd pool=kubernetes' mgr 'profile rbd pool=kubernetes'
+
+CEPH_FSID="$(ceph -s | awk /id/ '{ print $2 }')"
+CEPH_MON_IPS=["${OAM_ADDR}:6789"]
+CEPH_KUBE_KEY="$(ceph auth get-key client.kubernetes)"
+
+tee /tmp/csi-config-map.yaml <<EOF
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  config.json: |-
+    [
+      {
+        "clusterID": "${CEPH_FSID}",
+        "monitors": ${CEPH_MON_IPS}
+      }
+    ]
+metadata:
+  name: ceph-csi-config
+EOF
+tee /tmp/csi-kms-config-map.yaml <<EOF
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  config.json: |-
+    {}
+metadata:
+  name: ceph-csi-encryption-kms-config
+EOF
+tee /tmp/ceph-config-map.yaml <<EOF
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  ceph.conf: |
+    [global]
+    auth_cluster_required = cephx
+    auth_service_required = cephx
+    auth_client_required = cephx
+  # keyring is a required key and its value should be empty
+  keyring: |
+metadata:
+  name: ceph-config
+EOF
+tee /tmp/csi-rbd-secret.yaml <<EOF
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: csi-rbd-secret
+  namespace: default
+stringData:
+  userID: kubernetes
+  userKey: ${CEPH_KUBE_KEY}
+EOF
+tee /tmp/csi-rbd-sc.yaml <<EOF
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+   name: csi-rbd-sc
+provisioner: rbd.csi.ceph.com
+parameters:
+   clusterID: ${CEPH_FSID}
+   pool: kubernetes
+   imageFeatures: layering
+   csi.storage.k8s.io/provisioner-secret-name: csi-rbd-secret
+   csi.storage.k8s.io/provisioner-secret-namespace: default
+   csi.storage.k8s.io/controller-expand-secret-name: csi-rbd-secret
+   csi.storage.k8s.io/controller-expand-secret-namespace: default
+   csi.storage.k8s.io/node-stage-secret-name: csi-rbd-secret
+   csi.storage.k8s.io/node-stage-secret-namespace: default
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+mountOptions:
+   - discard
+EOF

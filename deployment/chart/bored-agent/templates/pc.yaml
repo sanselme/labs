@@ -1,0 +1,11 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: {{ include "bored-agent.fullname" . }}
+  labels:
+    app.kubernetes.io/created-by: resource-stack
+    app.kubernetes.io/managed-by: Lens
+    app.kubernetes.io/name: lens-spaces-agent
+    {{- include "bored-agent.labels" . | nindent 4 }}
+preemptionPolicy: PreemptLowerPriority
+value: 999999000

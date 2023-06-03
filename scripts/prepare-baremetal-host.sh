@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
 #
@@ -17,7 +17,10 @@
 
 set -e
 
+: "${DOMAIN:="dev.local"}"
+: "${INTERFACE:="bond0"}"
 : "${LOCALE:="C.UTF-8"}"
+: "${NAMESERVERS:="1.1.1.1 9.9.9.9"}"
 : "${TIMEZONE:="America/Toronto"}"
 
 # disable swap
@@ -33,19 +36,23 @@ timedatectl set-ntp true
 timedatectl set-timezone "${TIMEZONE}"
 
 # set dns
-resolvectl dns "${NAMESERVERS}"
-resolvectl domain "${DOMAIN}"
+resolvectl dns "${INTERFACE}" "${NAMESERVERS}"
+resolvectl domain "${INTERFACE}" "${DOMAIN}"
 
 # install packages
 RELEASE="$(uname -r)"
-apt update -y
-apt install -y \
+apt-get update -y
+apt-get install -y \
+  "linux-modules-extra-${RELEASE}" \
+  apparmor \
+  apt-transport-https \
   ca-certificates \
   curl \
   gnupg \
   jq \
   libcephfs2 \
   libseccomp2 \
-  "linux-modules-extra-${RELEASE}" \
   lsb-release \
   python3-rbd
+
+exit 0

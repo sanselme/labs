@@ -1,0 +1,92 @@
+version: 0.1
+cli:
+  version: 1.12.0
+plugins:
+  sources:
+    - id: trunk
+      ref: v0.0.21
+      uri: https://github.com/trunk-io/plugins
+lint:
+  enabled:
+    - actionlint@1.6.25
+    - checkov@2.3.321
+    - codespell@2.4.0
+    - cspell@6.0.0
+    - dotenv-linter@3.3.0
+    - git-diff-check
+    - gitleaks@8.17.0
+    - markdownlint@0.35.0
+    - prettier@3.0.0
+    - semgrep@1.31.2
+    - shellcheck@0.9.0
+    - shfmt@3.6.0
+    - trivy@0.43.1
+    - hadolint@2.12.0
+    - terrascan@1.18.1
+    - hadolint@2.12.0
+    - terrascan@1.18.1
+    - dotenv-linter@3.3.0
+    - gofmt@1.20.4
+    - goimports@1.19.5
+    - golangci-lint@1.42.1
+    - yamllint@1.32.0
+  disabled:
+    # Ansible
+    - ansible-lint@5.0.14
+    # C/C++/Protocol Buffers
+    - clang-format@13.0.0
+    - clang-tidy@13.0.0
+    # CSS/SCSS
+    - stylelint@14.0.0
+    # Docker
+    # Environment Variables
+    # Go
+    # JavaScript/TypeScript/YAML/JSON
+    - eslint@8.44.0
+    # Protocol Buffers
+    - buf-breaking@0.56.0
+    - buf-lint@0.56.0
+    # Python
+    - autopep8@1.5.7
+    - bandit@1.7.5
+    - black@23.7.0
+    - flake8@6.0.0
+    - isort@5.12.0
+    - pylint@2.11.1
+    - ruff@0.0.277
+    - trufflehog@3.44.0
+    - yapf@0.31.0
+    # Rust
+    - clippy@2.1.0
+    - rustfmt@1.5.0
+    # SQL
+    - sql-formatter@3.0.0
+    # SVG
+    - svgo@2.5.0
+    # Toml
+    - taplo@0.7.0
+    # YAML
+runtimes:
+  enabled:
+    - go@1.19.5
+    - node@18.12.1
+    - python@3.10.8
+    - rust@1.56.0
+actions:
+  enabled:
+    - trunk-announce
+    - trunk-upgrade-available
+  disabled:
+    - custom-git-hook
+    - trunk-check-pre-push
+    - trunk-fmt-pre-commit
+  definitions:
+    - id: custom-git-hook
+      triggers:
+        - git_hooks:
+            - pre-commit
+            - pre-push
+      run: |
+        #!/bin/bash
+        echo "Custom git hook"
+        exit 0

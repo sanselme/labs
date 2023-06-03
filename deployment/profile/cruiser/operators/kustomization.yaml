@@ -1,0 +1,166 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: operators
+resources:
+  - ../../../global/knative
+  - namespace.yaml
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/conversion/webhook/clientConfig/service/namespace
+        value: operators
+    target:
+      kind: CustomResourceDefinition
+      name: knativeeventings.operator.knative.dev
+  - patch: |-
+      - op: replace
+        path: /spec/conversion/webhook/clientConfig/service/namespace
+        value: operators
+    target:
+      kind: CustomResourceDefinition
+      name: knativeservings.operator.knative.dev
+  - patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: operators
+    target:
+      kind: ServiceAccount
+      name: knative-operator
+  - patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: operators
+    target:
+      kind: ServiceAccount
+      name: operator-webhook
+  - patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: operators
+    target:
+      kind: Role
+      name: knative-operator-webhook
+  - patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: operators
+    target:
+      kind: ClusterRoleBinding
+      name: knative-serving-operator
+  - patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: operators
+    target:
+      kind: ClusterRoleBinding
+      name: knative-eventing-operator
+  - patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: operators
+    target:
+      kind: ClusterRoleBinding
+      name: knative-operator
+  - patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: operators
+    target:
+      kind: ClusterRoleBinding
+      name: knative-serving-operator-aggregated
+  - patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: operators
+    target:
+      kind: ClusterRoleBinding
+      name: knative-serving-operator-aggregated-stable
+  - patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: operators
+    target:
+      kind: ClusterRoleBinding
+      name: knative-eventing-operator-aggregated
+  - patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: operators
+    target:
+      kind: ClusterRoleBinding
+      name: knative-eventing-operator-aggregated-stable
+  - patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: operators
+    target:
+      kind: ClusterRoleBinding
+      name: operator-webhook
+  - patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: operators
+      - op: replace
+        path: /subjects/0/namespace
+        value: operators
+    target:
+      kind: RoleBinding
+      name: operator-webhook
+  - patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: operators
+    target:
+      kind: Secret
+      name: operator-webhook-certs
+  - patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: operators
+    target:
+      kind: ConfigMap
+      name: config-logging
+  - patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: operators
+    target:
+      kind: ConfigMap
+      name: config-observability
+  - patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: operators
+    target:
+      kind: Deployment
+      name: operator-webhook
+  - patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: operators
+    target:
+      kind: Deployment
+      name: knative-operator
+  - patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: operators
+    target:
+      kind: Service
+      name: operator-webhook

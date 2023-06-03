@@ -1,0 +1,9 @@
+apiVersion: externaldata.gatekeeper.sh/v1alpha1
+kind: Provider
+metadata:
+  name: {{ include "cosign-gatekeeper-provider.fullname" . }}-cosign-gatekeeper-provider
+  labels:
+    {{- include "cosign-gatekeeper-provider.labels" . | nindent 4 }}
+spec:
+  url: http://{{ include "cosign-gatekeeper-provider.fullname" . }}.{{ .Release.Namespace }}:8090/validate
+  timeout: 30

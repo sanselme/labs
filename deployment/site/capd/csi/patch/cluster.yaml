@@ -1,0 +1,157 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: rook-ceph-cluster
+spec:
+  values:
+    cephBlockPools:
+      - name: ceph-blockpool
+        spec:
+          replicated:
+            size: 1
+        storageClass:
+          allowVolumeExpansion: true
+          enabled: true
+          isDefault: true
+          name: ceph-block
+    cephBlockPoolsVolumeSnapshotClass:
+      enabled: false
+      isDefault: false
+      name: ceph-block
+    cephClusterSpec:
+      crashCollector:
+        disable: false
+      dashboard:
+        enabled: true
+        ssl: true
+      healthCheck:
+        daemonHealth:
+          mon:
+            disabled: false
+          osd:
+            disabled: false
+          status:
+            disabled: false
+        livenessProbe:
+          mgr:
+            disabled: false
+          mon:
+            disabled: false
+          osd:
+            disabled: false
+      logCollector:
+        enabled: true
+      mgr:
+        count: 1
+      mon:
+        count: 1
+      network:
+        connections:
+          encryption:
+            enabled: false
+      resources:
+        cleanup: {}
+        crashcollector: {}
+        exporter: {}
+        logcollector: {}
+        mgr: {}
+        mgr-sidecar: {}
+        mon: {}
+        osd: {}
+        prepareosd: {}
+      storage:
+        useAllNodes: true
+        useAllDevices: false
+        devices:
+          - name: /dev/loop1
+          - name: /dev/loop2
+          - name: /dev/loop3
+    cephFileSystemVolumeSnapshotClass:
+      enabled: true
+      isDefault: true
+      name: ceph-filesystem
+    cephFileSystems:
+      - name: ceph-filesystem
+        spec:
+          dataPools:
+            - name: data0
+              replicated:
+                size: 1
+          metadataPool:
+            replicated:
+              size: 1
+          metadataServer:
+            activeCount: 1
+            resources: {}
+        storageClass:
+          enabled: true
+          isDefault: false
+          name: ceph-filesystem
+          pool: data0
+    cephObjectStores:
+      - name: ceph-objectstore
+        ingress:
+          enabled: true
+          annotations:
+            kubernetes.io/tls-acme: "true"
+            cert-manager.io/cluster-issuer: cluster-issuer
+          host:
+            name: oss.kind.dev.local
+            path: /
+          tls:
+            - hosts:
+                - oss.kind.dev.local
+              secretName: ceph-objectstore-tls
+          ingressClassName: cilium
+        spec:
+          dataPool:
+            erasureCoded:
+              codingChunks: 1
+              dataChunks: 1
+          gateway:
+            instances: 1
+            securePort: 443
+            resources: {}
+          metadataPool:
+            replicated:
+              size: 1
+        storageClass:
+          enabled: true
+          name: ceph-bucket
+          parameters:
+            region: us-east-1
+    ingress:
+      dashboard:
+        annotations:
+          kubernetes.io.tls-acme: "true"
+          cert-manager.io/cluster-issuer: cluster-issuer
+        host:
+          name: rook.kind.dev.local
+          path: "/ceph-dashboard(/|$)(.*)"
+        tls:
+          - hosts:
+              - rook.kind.dev.local
+            secretName: rook-ceph-tls
+        ingressClassName: cilium
+    monitoring:
+      createPrometheusRules: true
+      enabled: true
+    toolbox:
+      enabled: false
+      resources: {}

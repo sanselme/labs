@@ -1,0 +1,64 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: kasten
+spec:
+  values:
+    scc:
+      create: false
+    global:
+      persistence:
+        storageClass: standard
+      rhMarketPlace: false
+      ingress:
+        create: false
+      prometheus:
+        external:
+          host: ""
+          port: ""
+          baseURL: ""
+    ingress:
+      create: false
+    prometheus:
+      server:
+        enabled: false
+    jaeger:
+      enabled: false
+    metering:
+      mode: airgap
+    executorReplicas: 3
+    auth:
+      groupAllowList: []
+      basicAuth:
+        enabled: false
+      oidcAuth:
+        enabled: true
+        providerURL: ""
+        redirectURL: ""
+        scopes: ""
+        prompt: "select_account"
+        clientID: ""
+        clientSecret: ""
+        usernameClaim: ""
+        usernamePrefix: ""
+        groupClaim: ""
+        groupPrefix: ""
+        logoutURL: ""
+        secretName: ""
+      k10AdminUsers: []
+      k10AdminGroups: []
+    gateway:
+      insecureDisableSSLVerify: true
+      exposeAdminPort: true
+    grafana:
+      enabled: true
+    encryption:
+      primaryKey:
+        vaultTransitKeyName: ""
+        vaultTransitPath: ""
+    vault:
+      role: ""
+      serviceAccountTokenPath: ""
+      address: "http://vault.iam.svc:8200"
+      secretName: ""

@@ -1,13 +1,44 @@
-name: cicd
+name: Gate CI
 
 on:
-  - push
-  - pull_request
+  push: {}
+  pull_request: {}
+  schedule:
+    - cron: 30 1 * * 6
+
+permissions: read-all
 
 jobs:
-  label:
-    uses: labsonline/cicd/.github/workflows/label.yml@main
-  lint:
-    uses: labsonline/cicd/.github/workflows/lint.yml@main
-  review:
-    uses: labsonline/cicd/.github/workflows/review.yml@main
+  # FIXME: dependabot action
+  bot:
+    uses: labsonline/cicd/.github/workflows/bot.yml@main
+    permissions:
+      issues: write
+      pull-requests: write
+      repository-projects: write
+    with:
+      dependency-name: my-dependency
+  gate:
+    uses: labsonline/cicd/.github/workflows/gate.yml@main
+    permissions: write-all
+  scorecard:
+    uses: labsonline/cicd/.github/workflows/scorecard.yml@main
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      deployments: read
+      discussions: read
+      issues: read
+      packages: read
+      pages: read
+      pull-requests: read
+      repository-projects: read
+      statuses: read
+      id-token: write
+      security-events: write
+  cleanup:
+    uses: labsonline/cicd/.github/workflows/cleanup.yml@main
+    permissions:
+      issues: write
+      pull-requests: write

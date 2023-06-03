@@ -156,16 +156,28 @@ fabric.properties
 # Built Visual Studio Code Extensions
 *.vsix
 
-# Project Specific
-.trunk/*
-!.trunk/trunk.yaml
-
-build/*
-!build/package/
-!build/actions/
-!build/site/
-
+# Ignore
 *.env*
-!*.env.example
 *.input*
+*.pub
+*.tar.gz
+*.tgz
+**/charts/*
+build/*
+build/site/*
+deployment/site/*
+
+# Allow
+!*.env.example
 !*.input.example
+!*.sops.pub
+!*cosign.pub
+!build/package
+!build/site/
+!build/site/bootstrap/.gitkeep
+!build/site/capd/
+!build/site/capi/
+!build/site/sandbox
+!deployment/site/bootstrap/
+!deployment/site/capd/
+!deployment/site/sandbox/

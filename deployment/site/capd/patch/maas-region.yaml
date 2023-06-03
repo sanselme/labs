@@ -1,0 +1,54 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: maas
+spec:
+  values:
+    conf:
+      ssh:
+        private_key: null
+      bind:
+        override:
+        append:
+      curtin:
+        # late_commands:
+        #   install_modules_extra: ["curtin", "in-target", "--", "apt-get", "-y", "install", "linux-modules-extra-4.15.0-88-generic"]
+      cloudconfig:
+        sections: {}
+      maas:
+        override:
+        append:
+        dns:
+          require_dnssec: no
+        extra_settings:
+          # force_v1_network_yaml: true
+          network_discovery: enabled
+    pod:
+      replicas:
+        rack: 1
+        region: 1
+      resources:
+        enabled: false
+    endpoints:
+      maas_syslog:
+        host_fqdn_override:
+          public: maas.kind.dev.local
+      maas_region:
+        host_fqdn_override:
+          public: maas.kind.dev.local

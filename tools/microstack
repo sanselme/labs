@@ -1,0 +1,293 @@
+#!/bin/bash
+
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+set -eux
+
+# TODO: microstack
+# - configure kernel
+# - install microstack if not installed
+# - configure connections
+# - configure aliases if enabled
+# - configure microstack
+# - initialize microstack
+# - enable cinder
+# - configure network
+# - configure endpoints
+# - configure horizon
+# - configure acme
+
+# kernel tweaks
+echo fs.inotify.max_queued_events=1048576 | sudo tee -a /etc/sysctl.conf
+echo fs.inotify.max_user_instances=1048576 | sudo tee -a /etc/sysctl.conf
+echo fs.inotify.max_user_watches=1048576 | sudo tee -a /etc/sysctl.conf
+echo vm.max_map_count=262144 | sudo tee -a /etc/sysctl.conf
+echo vm.swappiness=1 | sudo tee -a /etc/sysctl.conf
+
+sudo sysctl -p
+
+# install microstack
+snap install microstack --channel=latest/beta
+
+# microstack connections
+snap connect microstack:netlink-connector
+snap connect microstack:network-observe
+snap connect microstack:ssh-keys
+
+# microstack aliases
+snap alias microstack.mysql mysql
+snap alias microstack.openstack openstack
+snap alias microstack.ovs-vsctl ovs-vsctl
+snap alias microstack.rabbitmqctl rabbitmqctl
+snap alias microstack.virsh virsh
+
+# configure microstack
+snap set microstack config.host.ip-forwarding=True
+
+snap set microstack config.network.compute-ip="${OAM_ADDR}"
+snap set microstack config.network.control-ip="${OAM_ADDR}"
+snap set microstack config.network.dns-domain="${DOMAINNAME}."
+snap set microstack config.network.dns-servers="${DNSSERVERS}"
+snap set microstack config.network.ext-cidr="${EXTCIDR}"
+snap set microstack config.network.ext-gateway="${EXTGW}"
+
+# TODO: cinder-volumes
+truncate -s "${CINDER_BLK_SIZE_GB:-32}G" /var/snap/microstack/common/lib/volumes/cinder-volumes.img
+losetup /dev/loop999 /var/snap/microstack/common/lib/volumes/cinder-volumes.img
+pvcreate /dev/loop999
+vgcreate cinder-volumes /dev/loop999
+
+# initialize microstack
+microstack init --auto --control --default-source-ip "${OAM_ADDR}"
+
+# enable cinder
+systemctl enable --now snap.microstack.cinder-volume.service
+systemctl enable --now snap.microstack.cinder-backup.service
+systemctl enable --now snap.microstack.iscsid.service
+systemctl enable --now snap.microstack.target.service
+
+# remove network confiration
+openstack router unset test-router --external-gateway
+openstack router remove subnet test-router test-subnet
+openstack router delete test-router
+
+openstack subnet delete test-subnet
+openstack subnet delete external-subnet
+
+openstack network delete test
+openstack network delete external
+
+# configure neutron
+tee /var/snap/microstack/common/etc/neutron/neutron.conf.d/neutron-snap.conf <<eof
+[DEFAULT]
+state_path = /var/snap/microstack/common/lib
+use_journal = True
+bind_port = 9686
+
+log_file = /var/snap/microstack/common/log/neutron.log
+debug = False
+
+dns_domain = ${DOMAINNAME}.
+
+core_plugin = ml2
+service_plugins = metering,segments,ovn-router,trunk
+allow_overlapping_ips = True
+network_auto_schedule = False
+
+[oslo_concurrency]
+lock_path = /var/snap/microstack/common/lock
+
+[ovn]
+dns_servers= ${DNSSERVERS}
+ovn_metadata_enabled = True
+
+#enable_distributed_floating_ip = True
+eof
+
+tee /var/snap/microstack/common/etc/neutron/plugins/ml2/ml2_conf.ini <<eof
+[ml2]
+mechanism_drivers = ovn,openvswitch,l2population
+type_drivers = local,flat,vlan,vxlan,gre,geneve
+tenant_network_types = geneve
+overlay_ip_version = 4
+external_network_type = vlan
+
+[ml2_type_geneve]
+vni_ranges = 1:65535
+max_header_size = 38
+
+[ml2_type_gre]
+tunnel_id_ranges = 1:1000
+
+[ml2_type_vxlan]
+vni_ranges = 1:65535
+vxlan_group = None
+
+[ml2_type_vlan]
+network_vlan_ranges = physnet1:1:4094
+
+[ml2_type_flat]
+flat_networks = *
+
+[ovn]
+ovn_nb_connection = unix:/var/snap/microstack/common/run/ovn/ovnnb_db.sock
+ovn_sb_connection = unix:/var/snap/microstack/common/run/ovn/ovnsb_db.sock
+eof
+
+# configure network
+systemctl restart snap.microstack.neutron-*
+
+ovs-vsctl add-bond br-ex bond0 "${INTIF1}" "${INTIF2}"
+ovs-vsctl add-port br-ex vlan"${EXTVLAN}" tag="${EXTVLAN}" -- set interface vlan"${EXTVLAN}" type=internal
+
+openstack network create external-network --enable --share --external --provider-physical-network physnet1 --provider-network-type vlan --tag "${EXTVLAN}"
+openstack network create test-network --enable
+
+openstack subnet create external-subnet --network external-network --subnet-range "${EXTCIDR}" --gateway "${EXTGW}" --allocation-pool start="${EXTSTART}",end="${EXTEND}"
+openstack subnet create test-subnet --network test-network --subnet-range "${TESTCIDR}"
+
+openstack router create test-router --enable
+openstack router set test-router --enable-snat --external-gateway external-network
+openstack router add subnet test-router test-subnet
+
+ip link set ovs-system up
+ip link set br-int up
+ip link set br-ex up
+ip link set "vlan${EXTVLAN}" up
+
+ip addr del "${EXTCIDR}" dev br-ex
+ip addr add "${EXTCIDR}" dev "vlan${EXTVLAN}"
+
+# configure endpoints
+SERVICES="glance cinderv2 cinderv3 neutron nova placement keystone"
+
+for SVC in "${SERVICES}"; do
+  EPID="$(openstack --insecure endpoint list --service "${SVC}" --format value | awk '{ print $1 }')"
+  PORT="$(openstack --insecure endpoint list --service "${SVC}" --interface public --format value | awk '{ print $7 }' | cut -d':' -f3)"
+
+  for ID in "${EPID}"; do openstack --insecure endpoint set "${ID}" --url "https://${FQDN}:${PORT}"; done
+done
+
+# configure nginx
+sed -i "s/listen 10002/listen ${OAM_ADDR}:10002/g" /var/snap/microstack/common/etc/nginx/sites-enabled/cluster.conf || true
+sed -i "s/listen 5000/listen ${VIP_ADDR}:5000/g" /var/snap/microstack/common/etc/nginx/sites-enabled/keystone.conf || true
+sed -i "s/listen 9292/listen ${VIP_ADDR}:9292/g" /var/snap/microstack/common/etc/nginx/sites-enabled/glance.conf || true
+sed -i "s/listen 8776/listen ${VIP_ADDR}:8776/g" /var/snap/microstack/common/etc/nginx/sites-enabled/cinder.conf || true
+sed -i "s/listen 9696/listen ${VIP_ADDR}:9696/g" /var/snap/microstack/common/etc/nginx/sites-enabled/neutron.conf || true
+sed -i "s/listen 8774/listen ${VIP_ADDR}:8774/g" /var/snap/microstack/common/etc/nginx/sites-enabled/nova.conf || true
+sed -i "s/listen 8778/listen ${VIP_ADDR}:8778/g" /var/snap/microstack/common/etc/nginx/sites-enabled/placement.conf || true
+sed -i "s/listen 443/listen ${VIP_ADDR}:443/g" /var/snap/microstack/common/etc/nginx/sites-enabled/horizon.conf || true
+
+# TODO: configuring services
+sed -i "/^port.*/a bind-address=${OAM_ADDR}" /var/snap/microstack/common/etc/mysql/my.cnf
+sed -i "s/5672/{\"${OAM_ADDR}\", 5672}/g" /var/snap/microstack/common/etc/rabbitmq/rabbitmq.config
+sed -i "s/#listen_addr = \"192.168.0.1\"/listen_addr = \"${OAM_ADDR}\"/g" /var/snap/microstack/common/etc/libvirt/libvirtd.conf
+
+sed -i "/^bind_port.*/a my_ip = ${OAM_ADDR}" /var/snap/microstack/common/etc/glance/glance.conf.d/glance-snap.conf
+sed -i "s/auth_uri.*/auth_uri = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/glance/glance.conf.d/keystone.conf
+sed -i "s/auth_url.*/auth_url = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/glance/glance.conf.d/keystone.conf
+
+sed -i "s/auth_uri.*/auth_uri = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/cinder/cinder.conf.d/keystone.conf
+sed -i "s/auth_url.*/auth_url = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/cinder/cinder.conf.d/keystone.conf
+
+sed -i "/^bind_port.*/a my_ip = ${OAM_ADDR}" /var/snap/microstack/common/etc/neutron/neutron.conf.d/neutron-snap.conf
+sed -i "s/auth_uri.*/auth_uri = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/neutron/neutron.conf.d/keystone.conf
+sed -i "s/auth_url.*/auth_url = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/neutron/neutron.conf.d/keystone.conf
+sed -i "s/auth_url.*/auth_url = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/neutron/neutron.conf.d/nova.conf
+sed -i "s/auth_url.*/auth_url = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/neutron/neutron.conf.d/placement.conf
+
+sed -i "s/0.0.0.0/${VIP_ADDR}/g" /var/snap/microstack/common/etc/nova/nova.conf.d/console.conf
+sed -i "s/${OAM_ADDR}/${VIP_ADDR}/g" /var/snap/microstack/common/etc/nova/nova.conf.d/console.conf
+sed -i "s/html5proxy_base_url.*/html5proxy_base_url = http:\/\/${FQDN}:6082\/spice_auto.html/g" /var/snap/microstack/common/etc/nova/nova.conf.d/console.conf
+sed -i "s/auth_uri.*/auth_uri = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/nova/nova.conf.d/keystone.conf
+sed -i "s/auth_url.*/auth_url = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/nova/nova.conf.d/keystone.conf
+sed -i "s/auth_uri.*/auth_uri = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/nova/nova.conf.d/placement.conf
+sed -i "s/auth_url.*/auth_url = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/nova/nova.conf.d/placement.conf
+sed -i "s/auth_url.*/auth_url = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/nova/nova.conf.d/neutron.conf
+sed -i "s/url.*/auth_url = https:\/\/${FQDN}:9696/g" /var/snap/microstack/common/etc/nova/nova.conf.d/neutron.conf
+
+sed -i "s/auth_uri.*/auth_uri = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/placement/placement.conf.d/keystone.conf
+sed -i "s/auth_url.*/auth_url = https:\/\/${FQDN}:5000\/v3/g" /var/snap/microstack/common/etc/placement/placement.conf.d/keystone.conf
+
+# FIXME: configure horizon
+sed -e "s/10.20.20.1/${OAM_ADDR}/g" /var/snap/microstack/common/etc/horizon/local_settings.d/_05_snap_tweaks.py
+sed -e "s/OPENSTACK_HOST.*/OPENSTACK_HOST = ${FQDN}/g" /var/snap/microstack/common/etc/horizon/local_settings.d/_05_snap_tweaks.py
+
+tee -a /var/snap/microstack/common/etc/horizon/local_settings.d/_05_snap_tweaks.py <<eof
+OPENSTACK_KEYSTONE_MULTIDOMAIN_SUPPORT = True
+
+OPENSTACK_CINDER_FEATURES = {
+        'enable_backup': True
+}
+eof
+
+# configure flavor
+openstack flavor delete m1.tiny
+openstack flavor delete m1.small
+openstack flavor delete m1.medium
+openstack flavor delete m1.large
+openstack flavor delete m1.xlarge
+
+openstack flavor create --ram 512 --disk 8 --vcpu 1 --public m1.tiny
+openstack flavor create --ram 2048 --disk 16 --vcpu 1 --public m1.small
+openstack flavor create --ram 4096 --disk 32 --vcpu 2 --public m1.medium
+openstack flavor create --ram 8192 --disk 64 --vcpu 4 --public m1.large
+openstack flavor create --ram 16384 --disk 128 --vcpu 8 --public m1.xlarge
+
+# add images
+# ubuntu
+openstack image delete cirros || true
+
+for IMG in "${IMAGES}"; do
+  IMG_URL="${IMG_ROOT_URL}/${IMG}/current/${IMG}-server-cloudimg-${ARCH}-disk-kvm.img"
+  IMG_FILE="${IMG}-server-cloudimg-${ARCH}-disk-kvm.img"
+
+  if [[ ! -f ${IMG_FILE} ]]; then
+    curl -sLO "${IMG_URL}"
+  fi
+
+  openstack --insecure image create --disk-format qcow2 --public --protected --file "${IMG}.img" "${IMG}-${ARCH}"
+done
+
+# capi
+curl -sLO "${CAPI_IMG_URL}/${CAPI_IMG_VERSION}.qcow2"
+openstack image create --disk-format qcow2 --public --protected --file "${CAPI_IMG_VERSION}.qcow2" "${CAPI_IMG_VERSION}"
+
+# extra
+for EXTRA_IMG in "${EXTRA_IMAGES}"; do
+  openstack --insecure image create --disk-format qcow2 --protected --file "${EXTRA_IMG}" "$(basename "${EXTRA_IMG%.*}")" || true
+done
+
+# cleanup
+rm -f "${CAPI_IMG_VERSION}"
+for IMG in "${IMAGES}"; do
+  IMG_FILE="${IMG}-server-cloudimg-${ARCH}-disk-kvm.img"
+
+  rm -f "${IMG_FILE}"
+  rm -f "${IMG_FILE}.qcow2"
+done
+
+# FIXME: configure horizon certificate
+source "${HOME}/.acme.sh/acme.sh.env"
+
+"${HOME}/.acme.sh/acme.sh" --install-cert \
+  -d "${FQDN}" \
+  --cert-file /var/snap/microstack/common/etc/ssl/certs/crt.pem \
+  --key-file /var/snap/microstack/common/etc/ssl/private/key.pem \
+  --reloadcmd 'snap restart microstack'
+
+snap set microstack config.tls.generate-self-signed=False
+snap set microstack config.network.ext-cidr=""

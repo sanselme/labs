@@ -1,0 +1,14 @@
+{{- if .Values.config.create -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Values.config.name }}"
+  labels:
+    app.kubernetes.io/created-by: resource-stack
+    app.kubernetes.io/managed-by: Lens
+    app.kubernetes.io/name: lens-spaces-agent
+    {{- include "bored-agent.labels" . | nindent 4 }}
+data:
+  lensPlatformK8sclusterId: "{{ .Values.config.clusterId }}"
+  lensPlatformSpaceName: "{{ .Values.config.spaceName }}"
+{{- end }}

@@ -1,0 +1,93 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: ClusterClass
+metadata:
+  name: capi
+spec:
+  controlPlane:
+    machineInfrastructure:
+      ref:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    ref:
+      apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+      kind: KubeadmControlPlaneTemplate
+  infrastructure:
+    ref:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+  patches: []
+  variables:
+    - name: imageRepository
+      required: true
+      schema:
+        openAPIV3Schema:
+          default: ""
+          description:
+            imageRepository sets the container registry to pull images from.
+            If empty, nothing will be set and the from of kubeadm will be used.
+          example: registry.k8s.io
+          type: string
+    - name: etcdImageTag
+      required: true
+      schema:
+        openAPIV3Schema:
+          default: ""
+          description: etcdImageTag sets the tag for the etcd image.
+          example: 3.5.3-0
+          type: string
+    - name: coreDNSImageTag
+      required: true
+      schema:
+        openAPIV3Schema:
+          default: ""
+          description: coreDNSImageTag sets the tag for the coreDNS image.
+          example: v1.8.5
+          type: string
+    - name: podSecurityStandard
+      required: false
+      schema:
+        openAPIV3Schema:
+          properties:
+            audit:
+              default: restricted
+              description:
+                audit sets the level for the audit PodSecurityConfiguration
+                mode. One of privileged, baseline, restricted.
+              type: string
+            enabled:
+              default: true
+              description:
+                enabled enables the patches to enable Pod Security Standard
+                via AdmissionConfiguration.
+              type: boolean
+            enforce:
+              default: baseline
+              description:
+                enforce sets the level for the enforce PodSecurityConfiguration
+                mode. One of privileged, baseline, restricted.
+              type: string
+            warn:
+              default: restricted
+              description:
+                warn sets the level for the warn PodSecurityConfiguration
+                mode. One of privileged, baseline, restricted.
+              type: string
+          type: object
+  workers:
+    machineDeployments:
+      - class: default-worker
+        template: {}

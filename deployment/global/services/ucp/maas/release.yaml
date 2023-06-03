@@ -1,0 +1,106 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: maas
+spec:
+  chart:
+    spec:
+      chart: sanselme/maas
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: docker
+        namespace: flux-system
+      version: 0.1.4
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  upgrade:
+    crds: CreateReplace
+  postRenderers:
+    - kustomize:
+        images:
+          - name: docker.io/postgres
+          - name: sanselme/maas-region-controller
+          - name: sanselme/maas-rack-controller
+          - name: sanselme/maas-region-controller
+          - name: sanselme/maas-region-controller
+          - name: sanselme/maas-region-controller
+          - name: quay.io/airshipit/sstream-cache
+          - name: sanselme/kubernetes-entrypoint
+          - name: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
+          - name: docker.io/busybox
+          - name: gcr.io/google_containers/ingress-gce-404-server-with-metrics-amd64
+          - name: sanselme/maas-region-controller
+          - name: sanselme/maas-region-controller
+  values:
+    dependencies:
+      static:
+        rack_controller:
+          services:
+            - service: maas_region
+              endpoint: internal
+          jobs:
+            - maas-export-api-key
+        region_controller:
+          jobs:
+            - maas-db-sync
+          services:
+            - service: maas_db
+              endpoint: internal
+        db_init:
+          services:
+            - service: maas_db
+              endpoint: internal
+        db_sync:
+          jobs:
+            - maas-db-init
+        bootstrap_admin_user:
+          jobs:
+            - maas-db-sync
+          services:
+            - service: maas_region
+              endpoint: internal
+            - service: maas_db
+              endpoint: internal
+        import_resources:
+          jobs:
+            - maas-bootstrap-admin-user
+          services:
+            - service: maas_region
+              endpoint: internal
+            - service: maas_db
+              endpoint: internal
+        export_api_key:
+          jobs:
+            - maas-bootstrap-admin-user
+          services:
+            - service: maas_region
+              endpoint: internal
+            - service: maas_db
+              endpoint: internal
+    manifests:
+      region_statefulset: false
+      rack_statefulset: false
+      test_maas_api: false
+      ingress_region: false
+      configmap_ingress: false
+      maas_ingress: false

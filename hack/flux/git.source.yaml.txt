@@ -1,0 +1,12 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: SOURCE_NAME
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  ref:
+    #tag: SOURCE_TAG
+    branch: main
+  url: SOURCE_URL

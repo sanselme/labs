@@ -1,0 +1,73 @@
+---
+apiVersion: ceph.rook.io/v1
+kind: CephNFS
+metadata:
+  name: my-nfs
+spec:
+  # Settings for the NFS server
+  server:
+    active: 1
+
+    placement:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: role
+                  operator: In
+                  values:
+                    - nfs-node
+      topologySpreadConstraints:
+      tolerations:
+        - key: nfs-node
+          operator: Exists
+      podAffinity:
+      podAntiAffinity:
+
+    annotations:
+      my-annotation: something
+
+    labels:
+      my-label: something
+
+    resources:
+      limits:
+        cpu: "3"
+        memory: "8Gi"
+      requests:
+        cpu: "3"
+        memory: "8Gi"
+
+    priorityClassName: ""
+
+    logLevel: NIV_INFO
+
+  security:
+    kerberos:
+      principalName: "nfs"
+      domainName: "DOMAIN1.EXAMPLE.COM"
+
+      configFiles:
+        volumeSource:
+          configMap:
+            name: my-krb5-config-files
+
+      keytabFile:
+        volumeSource:
+          secret:
+            secretName: my-nfs-keytab
+            defaultMode: 0600 # mode must be 0600
+
+    sssd:
+      sidecar:
+        image: registry.access.redhat.com/rhel7/sssd:latest
+
+        sssdConfigFile:
+          volumeSource:
+            configMap:
+              name: my-nfs-sssd-config
+              defaultMode: 0600 # mode must be 0600
+
+        debugLevel: 0
+
+        resources: {}

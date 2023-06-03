@@ -1,0 +1,35 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: knative-serving
+components:
+  - ../../../../global/certmanager/clusterissuer
+  - ../../../../global/knative/server
+resources:
+  - https://github.com/knative-sandbox/net-certmanager/releases/download/knative-v1.9.4/net-certmanager.yaml
+  - namespace.yaml
+patches:
+  - path: patch/clusterissuer.yaml
+  - path: patch/serving.yaml
+  - patch: |-
+      - op: replace
+        path: /metadata/name
+        value: knative-cluster-issuer
+    target:
+      kind: HelmRelease
+      name: cluster-issuer

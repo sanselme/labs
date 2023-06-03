@@ -1,0 +1,73 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeServing
+metadata:
+  name: knative-serving
+spec:
+  high-availability:
+    replicas: 3
+  security:
+    securityGuard:
+      enabled: false
+  ingress:
+    kourier:
+      enabled: true
+  config:
+    network:
+      auto-tls: Enabled
+      http-protocol: Redirected
+      ingress-class: kourier.ingress.networking.knative.dev
+  deployments: []
+  # - name: guard-service
+  #   env:
+  #   - container: guard-service
+  #     envVars:
+  #     - name: GUARD_SERVICE_TLS
+  #       value: "true"
+  #     - name: GUARD_SERVICE_AUTH
+  #       value: "true"
+  workloads:
+    - name: controller
+      resources:
+        - container: controller
+          requests:
+            cpu: 300m
+            memory: 100Mi
+          limits:
+            cpu: 1000m
+            memory: 250Mi
+    - name: webhook
+      replicas: 2
+      resources:
+        - container: controller
+          requests:
+            cpu: 300m
+            memory: 100Mi
+          limits:
+            cpu: 1000m
+            memory: 250Mi
+    - name: activator
+      replicas: 2
+      resources:
+        - container: controller
+          requests:
+            cpu: 300m
+            memory: 100Mi
+          limits:
+            cpu: 1000m
+            memory: 250Mi

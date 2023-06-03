@@ -1,0 +1,253 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: ClusterClass
+metadata:
+  name: capi-capd
+spec:
+  controlPlane:
+    machineInfrastructure:
+      ref:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: DockerMachineTemplate
+        name: capd-control-plane
+    ref:
+      apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+      kind: KubeadmControlPlaneTemplate
+      name: capd-control-plane
+  infrastructure:
+    ref:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      kind: DockerClusterTemplate
+      name: capd
+  patches:
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/clusterConfiguration/apiServer/certSANs
+              valueFrom:
+                variable: certSANs
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: KubeadmControlPlaneTemplate
+            matchResources:
+              controlPlane: true
+      description: Sets the certSANs used for the KubeadmControlPlane.
+      name: certSANs
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/initConfiguration/nodeRegistration/kubeletExtraArgs/cgroup-driver
+              value: cgroupfs
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/joinConfiguration/nodeRegistration/kubeletExtraArgs/cgroup-driver
+              value: cgroupfs
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: KubeadmControlPlaneTemplate
+            matchResources:
+              controlPlane: true
+      description: |
+        Sets the cgroupDriver to cgroupfs if a Kubernetes version < v1.24 is referenced.
+        This is required because kind and the node images do not support the default
+        systemd cgroupDriver for kubernetes < v1.24.
+      enabledIf: '{{ semverCompare "<= v1.23" .builtin.controlPlane.version }}'
+      name: cgroupDriver-controlPlane
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/joinConfiguration/nodeRegistration/kubeletExtraArgs/cgroup-driver
+              value: cgroupfs
+          selector:
+            apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+            kind: KubeadmConfigTemplate
+            matchResources:
+              machineDeploymentClass:
+                names:
+                  - default-worker
+      description: |
+        Sets the cgroupDriver to cgroupfs if a Kubernetes version < v1.24 is referenced.
+        This is required because kind and the node images do not support the default
+        systemd cgroupDriver for kubernetes < v1.24.
+      enabledIf: '{{ semverCompare "<= v1.23" .builtin.machineDeployment.version }}'
+      name: cgroupDriver-machineDeployment
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/customImage
+              valueFrom:
+                template: |
+                  kindest/node:{{ .builtin.machineDeployment.version | replace "+" "_" }}
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+            kind: DockerMachineTemplate
+            matchResources:
+              machineDeploymentClass:
+                names:
+                  - default-worker
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/customImage
+              valueFrom:
+                template: |
+                  kindest/node:{{ .builtin.controlPlane.version | replace "+" "_" }}
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+            kind: DockerMachineTemplate
+            matchResources:
+              controlPlane: true
+      description:
+        Sets the container image that is used for running dockerMachines
+        for the controlPlane and default-worker machineDeployments.
+      name: customImage
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/customImage
+              value: kindest/node:v1.23.17@sha256:f77f8cf0b30430ca4128cc7cfafece0c274a118cd0cdb251049664ace0dee4ff
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+            kind: DockerMachineTemplate
+            matchResources:
+              machineDeploymentClass:
+                names:
+                  - default-worker
+      description:
+        Sets the container image for MD DockerMachineTemplates using Kubernetes
+        v1.23.17.
+      enabledIf: '{{ semverCompare "v1.23.17" .builtin.machineDeployment.version }}'
+      name: replaceImage-v1.23.17-machineDeployment
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/customImage
+              value: kindest/node:v1.23.17@sha256:f77f8cf0b30430ca4128cc7cfafece0c274a118cd0cdb251049664ace0dee4ff
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+            kind: DockerMachineTemplate
+            matchResources:
+              controlPlane: true
+      description:
+        Sets the container image for CP DockerMachineTemplates using Kubernetes
+        v1.23.17.
+      enabledIf: '{{ semverCompare "v1.23.17" .builtin.controlPlane.version }}'
+      name: replaceImage-v1.23.17-controlPlane
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/clusterConfiguration/apiServer/extraArgs
+              value:
+                admission-control-config-file: /etc/kubernetes/kube-apiserver-admission-pss.yaml
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/clusterConfiguration/apiServer/extraVolumes
+              value:
+                - hostPath: /etc/kubernetes/kube-apiserver-admission-pss.yaml
+                  mountPath: /etc/kubernetes/kube-apiserver-admission-pss.yaml
+                  name: admission-pss
+                  pathType: File
+                  readOnly: true
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/files
+              valueFrom:
+                template: |
+                  - content: |
+                      apiVersion: apiserver.config.k8s.io/v1
+                      kind: AdmissionConfiguration
+                      plugins:
+                      - name: PodSecurity
+                        configuration:
+                          apiVersion: pod-security.admission.config.k8s.io/v1{{ if semverCompare "< v1.25" .builtin.controlPlane.version }}beta1{{ end }}
+                          kind: PodSecurityConfiguration
+                          defaults:
+                            enforce: "{{ .podSecurityStandard.enforce }}"
+                            enforce-version: "latest"
+                            audit: "{{ .podSecurityStandard.audit }}"
+                            audit-version: "latest"
+                            warn: "{{ .podSecurityStandard.warn }}"
+                            warn-version: "latest"
+                          exemptions:
+                            usernames: []
+                            runtimeClasses: []
+                            namespaces: [kube-system]
+                    path: /etc/kubernetes/kube-apiserver-admission-pss.yaml
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: KubeadmControlPlaneTemplate
+            matchResources:
+              controlPlane: true
+      description: Adds an admission configuration for PodSecurity to the kube-apiserver.
+      enabledIf: "{{ .podSecurityStandard.enabled }}"
+      name: podSecurityStandard
+  variables:
+    - name: certSANs
+      required: false
+      schema:
+        openAPIV3Schema:
+          default:
+            - localhost
+            - 127.0.0.1
+            - host.docker.internal
+          description:
+            certSANs sets the certSANs used for the KubeadmControlPlane.
+            If empty, nothing will be set and the from of kubeadm will be used.
+          items:
+            type: string
+          type: array
+    - name: podSecurityStandard
+      required: false
+      schema:
+        openAPIV3Schema:
+          properties:
+            audit:
+              default: restricted
+              description:
+                audit sets the level for the audit PodSecurityConfiguration
+                mode. One of privileged, baseline, restricted.
+              type: string
+            enabled:
+              default: true
+              description:
+                enabled enables the patches to enable Pod Security Standard
+                via AdmissionConfiguration.
+              type: boolean
+            enforce:
+              default: baseline
+              description:
+                enforce sets the level for the enforce PodSecurityConfiguration
+                mode. One of privileged, baseline, restricted.
+              type: string
+            warn:
+              default: restricted
+              description:
+                warn sets the level for the warn PodSecurityConfiguration
+                mode. One of privileged, baseline, restricted.
+              type: string
+          type: object
+  workers:
+    machineDeployments:
+      - class: default-worker
+        template:
+          bootstrap:
+            ref:
+              apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+              kind: KubeadmConfigTemplate
+              name: capd-worker-bootstraptemplate
+          infrastructure:
+            ref:
+              apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+              kind: DockerMachineTemplate
+              name: capd-worker-machinetemplate

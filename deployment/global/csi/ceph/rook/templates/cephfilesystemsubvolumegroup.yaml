@@ -1,0 +1,7 @@
+---
+apiVersion: ceph.rook.io/v1
+kind: CephFilesystemSubVolumeGroup
+metadata:
+  name: group-a
+spec:
+  filesystemName: myfs

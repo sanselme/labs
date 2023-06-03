@@ -1,0 +1,40 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: k10-ceph-location-secret
+data:
+  aws_access_key_id: ""
+  aws_secret_access_key: ""
+---
+kind: Profile
+apiVersion: config.kio.kasten.io/v1alpha1
+metadata:
+  name: k10-ceph-location-profile
+spec:
+  type: Location
+  locationSpec:
+    type: ObjectStore
+    objectStore:
+      endpoint: https://ceph-objectstore.ceph.svc.cluster.local
+      name: k10-ceph-bkt
+      objectStoreType: S3
+    credential:
+      secretType: AwsAccessKey
+      secret:
+        name: k10-ceph-location-secret

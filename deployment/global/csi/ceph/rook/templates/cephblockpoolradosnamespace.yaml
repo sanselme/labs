@@ -1,0 +1,7 @@
+---
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPoolRadosNamespace
+metadata:
+  name: namespace-a
+spec:
+  blockPoolName: replicapool

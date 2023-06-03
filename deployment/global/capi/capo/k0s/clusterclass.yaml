@@ -1,0 +1,402 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: ClusterClass
+metadata:
+  name: capi-openstack
+spec:
+  controlPlane:
+    machineInfrastructure:
+      ref:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+        kind: OpenStackMachineTemplate
+        name: openstack-control-plane
+    ref:
+      apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+      kind: K0smotronControlPlane
+      name: openstack-control-plane
+  infrastructure:
+    ref:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+      kind: OpenStackClusterTemplate
+      name: openstack
+  patches:
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/controlPlaneEndpoint
+              valueFrom:
+                template: |
+                  host: {{ .controlPlaneEndpointAddr }}
+                  port: 6443
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackClusterTemplate
+            matchResources:
+              infrastructureCluster: true
+      description: Sets the control plane endpoint.
+      name: controlPlaneEndpointAddr
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/k0sVersion
+              valueFrom:
+                variable: k0sVersion
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: K0smotronControlPlane
+            matchResources:
+              controlPlane: true
+        - jsonPatches:
+            - op: add
+              path: /spec/k0sVersion
+              valueFrom:
+                variable: k0sVersion
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: K0sWorkerConfig
+            matchResources:
+              machineDeploymentClass:
+                names:
+                  - default-worker
+      description: Sets the k0s version.
+      name: k0sVersion
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/persistence/type
+              valueFrom:
+                variable: persistenceType
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: K0smotronControlPlane
+            matchResources:
+              controlPlane: true
+      description: Sets the persistence type.
+      name: persistenceType
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/service/type
+              valueFrom:
+                variable: serviceType
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: K0smotronControlPlane
+            matchResources:
+              controlPlane: true
+      description: Sets the service type.
+      name: serviceType
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/cloudName
+              valueFrom:
+                variable: cloudName
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackClusterTemplate
+            matchResources:
+              infrastructureCluster: true
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/cloudName
+              valueFrom:
+                variable: cloudName
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackMachineTemplate
+            matchResources:
+              controlPlane: true
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/cloudName
+              valueFrom:
+                variable: cloudName
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackMachineTemplate
+            matchResources:
+              machineDeploymentClass:
+                names:
+                  - default-worker
+      description: Sets the Cloud name used for the OpenStackCluster.
+      name: cloudName
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/dnsNameservers
+              valueFrom:
+                variable: network.dnsNameservers
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackClusterTemplate
+            matchResources:
+              infrastructureCluster: true
+      description: Sets DNS nameservers used for the OpenStackCluster.
+      name: dnsNameservers
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/externalNetworkId
+              valueFrom:
+                variable: network.externalNetworkId
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackClusterTemplate
+            matchResources:
+              infrastructureCluster: true
+      description: Sets the external network id used for the OpenStackCluster.
+      name: externalNetworkId
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/nodeCidr
+              valueFrom:
+                variable: network.nodeCidr
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackClusterTemplate
+            matchResources:
+              infrastructureCluster: true
+      description: Sets the node network CIDR used for the OpenStackCluster.
+      name: nodeCidr
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/managedSecurityGroups
+              valueFrom:
+                variable: managedSecurityGroups
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackClusterTemplate
+            matchResources:
+              infrastructureCluster: true
+      description: Sets the managed security groups used for the OpenStackCluster.
+      name: managedSecurityGroups
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/apiServerLoadBalancer/enabled
+              valueFrom:
+                variable: loadBalancer.enabled
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackClusterTemplate
+            matchResources:
+              infrastructureCluster: true
+      description: Enable the apiServerLoadBalancer for the OpenStackCluster.
+      enabledIf: '{{ .loadBalancer.enabled }} && {{ eq .loadBalancer.type "openstack" }}'
+      name: enableAPIServerLB
+    - definitions:
+        - jsonPatches:
+            - op: replace
+              path: /spec/template/spec/flavor
+              valueFrom:
+                variable: flavor
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackMachineTemplate
+            matchResources:
+              controlPlane: true
+        - jsonPatches:
+            - op: replace
+              path: /spec/template/spec/flavor
+              valueFrom:
+                variable: flavor
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackMachineTemplate
+            matchResources:
+              machineDeploymentClass:
+                names:
+                  - default-worker
+      description: Sets the flavor used for the OpenStackCluster.
+      name: flavor
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/image
+              valueFrom:
+                variable: image
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackMachineTemplate
+            matchResources:
+              controlPlane: true
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/image
+              valueFrom:
+                variable: image
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackMachineTemplate
+            matchResources:
+              machineDeploymentClass:
+                names:
+                  - default-worker
+      description: Sets the image used for the OpenStackCluster.
+      name: image
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/sshKeyName
+              valueFrom:
+                variable: sshKeyName
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackMachineTemplate
+            matchResources:
+              controlPlane: true
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/sshKeyName
+              valueFrom:
+                variable: sshKeyName
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+            kind: OpenStackMachineTemplate
+            matchResources:
+              machineDeploymentClass:
+                names:
+                  - default-worker
+      description: Sets the ssh key name used for the OpenStackCluster.
+      name: sshKeyName
+  variables:
+    - name: controlPlaneEndpointAddr
+      required: true
+      schema:
+        openAPIV3Schema:
+          default: ""
+          description: The address of the control plane endpoint.
+          type: string
+    - name: k0sVersion
+      required: false
+      schema:
+        openAPIV3Schema:
+          default: v1.27.2-k0s.0
+          description: The k0s version to use. This must be a valid k0s version.
+          type: string
+    - name: persistenceType
+      required: false
+      schema:
+        openAPIV3Schema:
+          default: emptyDir
+          description: The persistence type to use.
+            One of emptyDir, hostPath, localVolume.
+          type: string
+    - name: serviceType
+      required: false
+      schema:
+        openAPIV3Schema:
+          default: NodePort
+          description: The service type to use.
+            One of ClusterIP, NodePort, LoadBalancer.
+          type: string
+    - name: cloudName
+      required: true
+      schema:
+        openAPIV3Schema:
+          default: ""
+          description: cloudName sets the cloudName used for the OpenStackCluster.
+          type: string
+    - name: network
+      required: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            dnsNameservers:
+              default:
+                - 1.1.1.1
+                - 9.9.9.9
+              description: dnsNameservers sets the dnsNameservers used for the OpenStackCluster.
+              items:
+                type: string
+              type: array
+            externalNetworkId:
+              default: ""
+              description: externalNetworkId sets the externalNetworkId used for the OpenStackCluster.
+              type: string
+            nodeCidr:
+              default: ""
+              description: nodeCidr sets the nodeCidr used for the OpenStackCluster.
+              type: string
+          type: object
+    - name: managedSecurityGroups
+      required: false
+      schema:
+        openAPIV3Schema:
+          default: false
+          description: managedSecurityGroups sets the managedSecurityGroups used for the OpenStackCluster.
+          type: boolean
+    - name: loadBalancer
+      required: false
+      schema:
+        openAPIV3Schema:
+          properties:
+            enabled:
+              default: false
+              description: enableLoadBalancer enables the loadBalancer for the OpenStackCluster.
+              type: boolean
+            type:
+              default: openstack
+              description: type sets the type of loadBalancer for the OpenStackCluster.
+              enum:
+                - openstack
+                - kubevip
+              type: string
+            interface:
+              default: eth0
+              description: interface is the interface to bind kube-vip to.
+              type: string
+          type: object
+    - name: flavor
+      required: false
+      schema:
+        openAPIV3Schema:
+          default: medium
+          description: flavor sets the flavor used for the OpenStackCluster.
+          type: string
+    - name: image
+      required: true
+      schema:
+        openAPIV3Schema:
+          default: ""
+          description: image sets the image used for the OpenStackCluster.
+          type: string
+    - name: sshKeyName
+      required: true
+      schema:
+        openAPIV3Schema:
+          default: ""
+          description: sshKeyName sets the sshKeyName used for the OpenStackCluster.
+          type: string
+  workers:
+    machineDeployments:
+      - class: default-worker
+        template:
+          bootstrap:
+            ref:
+              apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+              kind: K0sWorkerConfig
+              name: openstack-worker-bootstraptemplate
+          infrastructure:
+            ref:
+              apiVersion: infrastructure.cluster.x-k8s.io/v1alpha6
+              kind: OpenStackMachineTemplate
+              name: openstack-worker-machinetemplate

@@ -1,0 +1,65 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: kube-prom-stack
+spec:
+  values:
+    grafana:
+      enabled: true
+      additionalDataSources:
+        - name: Loki
+          type: loki
+          orgId: 1
+          access: proxy
+          url: http://loki:3100/
+          jsonData:
+            httpHeaderName1: X-Scope-OrgID
+            derivedFields:
+              - name: TraceID
+                dataSourceUid: Tempo
+                matcherRegex: traceID=(\w+)
+                url: $${__value.raw}
+              - name: TraceID
+                matcherRegex: traceID=(\w+)
+                url: http://localhost:16686/trace/$${__value.raw}
+          secureJsonData:
+            httpHeaderValue1: "1"
+        - name: Tempo
+          type: tempo
+          orgId: 1
+          access: proxy
+          url: http://tempo:3100/
+          jsonData:
+            httpHeaderName1: X-Scope-OrgID
+            lokiSearch:
+              dataSourceUid: Loki
+            nodeGraph:
+              enabled: true
+            serviceGraph:
+              dataSourceUid: Prometheus
+            tracesToMetrics:
+              dataSourceUid: Prometheus
+            tracesToLogsV2:
+              dataSourceUid: Loki
+              filterByTraceID: true
+              filterBySpanID: true
+              customQuery: true
+              query: method="${__span.tags.method}"
+          secureJsonData:
+            httpHeaderValue1: "1"

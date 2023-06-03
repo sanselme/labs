@@ -1,0 +1,133 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: cilium
+spec:
+  chart:
+    spec:
+      chart: cilium
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: cilium
+      version: 1.14.0-snapshot.4
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  upgrade:
+    crds: CreateReplace
+  postRenderers:
+    - kustomize:
+        images:
+          - name: quay.io/cilium/certgen
+          - name: quay.io/cilium/cilium
+          - name: quay.io/cilium/cilium-envoy
+          - name: quay.io/cilium/cilium-etcd-operator
+          - name: quay.io/cilium/clustermesh-apiserver
+          - name: quay.io/cilium/hubble-relay
+          - name: quay.io/cilium/hubble-ui
+          - name: quay.io/cilium/hubble-ui-backend
+          - name: quay.io/cilium/kvstoremesh
+          - name: quay.io/cilium/operator
+          - name: quay.io/cilium/startup-script
+          - name: quay.io/coreos/etcd
+  values:
+    securityContext:
+      privileged: true
+    bandwidthManager:
+      bbr: true
+      enabled: true
+    bgpControlPlane:
+      enabled: true
+    pmtuDiscovery:
+      enabled: true
+    containerRuntime:
+      integration: auto
+    ingressController:
+      enabled: true
+      enforceHttps: true
+      secretsNamespace:
+        create: false
+        name: kube-system
+    gatewayAPI:
+      enabled: true
+      secretsNamespace:
+        create: false
+        name: kube-system
+    encryption:
+      enabled: false
+      type: wireguard
+    externalIPs:
+      enabled: true
+    hostFirewall:
+      enabled: true
+    hubble:
+      metrics:
+        dashboards:
+          enabled: true
+          namespace: observability
+        enableOpenMetrics: true
+        enabled:
+          - dns:query;ignoreAAAA
+          - drop
+          - tcp
+          - flow
+          - icmp
+          - http
+        serviceMonitor:
+          enabled: true
+      relay:
+        enabled: true
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+    ipam:
+      mode: kubernetes
+    monitor:
+      enabled: true
+    loadBalancer:
+      mode: dsr
+      serviceTopology: true
+      algorithm: maglev
+      l7:
+        backend: envoy
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        trustCRDsExist: true
+    dashboards:
+      enabled: true
+      namespace: observability
+    proxy:
+      prometheus:
+        enabled: true
+    tunnel: disabled
+    routingMode: native
+    operator:
+      dashboards:
+        enabled: true
+        namespace: observability
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true

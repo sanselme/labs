@@ -7,6 +7,8 @@ github-actions:
   - .github/*.yml
   - .github/workflows/*
   - .github/workflows/*/**
+  - build/package/action.yml
+  - build/package/actions/**
 
 # Add 'devcontainer' label to files in the .devcontainer directory
 # and any file with the .docker directory
@@ -15,3 +17,47 @@ devcontainer:
   - .devcontainer/**/*
   - .docker/*
   - .docker/**/*
+
+# Add 'build' label to files in the build directory
+build:
+  - build/*
+  - build/**/*
+
+# Add 'command' label to files in the cmd directory
+command:
+  - cmd/*
+  - cmd/**/*
+
+# Add 'config' label to files in the conf directory
+# and any file with a .conf extension
+configuration:
+  - "*.conf"
+  - conf/*
+  - conf/**/*
+
+# Add 'docker' label to Dockerfile
+docker:
+  - build/package/**/Dockerfile
+  - build/package/Dockerfile
+
+# Add 'helm' label to helm chart
+helm:
+  - deployment/chart/*
+  - deployment/chart/**
+
+# Add 'scripts' label to files in scripts
+# and any file with a .sh extension
+scripts:
+  - "*.sh"
+  - scripts/*
+  - scripts/**/*
+
+# Add 'deployment' label to files in the deployment directory
+deployment:
+  - deployment/*
+  - deployment/**/*
+
+# Add 'tools' label to change within the tools directory
+tools:
+  - tools/*
+  - tools/*/**

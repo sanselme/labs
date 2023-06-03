@@ -1,0 +1,7 @@
+[Path]
+Unit=byoh-hostagent-watcher.service
+PathChanged=/etc/byoh/bootstrap-kubeconfig.conf
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target

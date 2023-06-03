@@ -1,0 +1,53 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+users:
+  - default
+  - name: administrator
+    gecos: Administrator
+    lock_passwd: true
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys: []
+ca_certs:
+  remove-defaults: false
+  trusted: []
+packages:
+  - apparmor
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - libcephfs2
+  - libseccomp2
+  - python3-rbd
+write_files:
+  - path: /usr/local/lib/systemd/system/byoh-hostagent-watcher.path
+    permissions: 0644
+    owner: root
+    content: |
+      ${BYOH_HOSTAGENT_WATCHER_PATH}
+  - path: /usr/local/lib/systemd/system/byoh-hostagent-watcher.service
+    permissions: 0644
+    owner: root
+    content: |
+      ${BYOH_HOSTAGENT_WATCHER_SERVICE}
+  - path: /usr/local/lib/systemd/system/byoh-hostagent.service
+    permissions: 0644
+    owner: root
+    content: |
+      ${BYOH_HOSTAGENT_SERVICE}
+  - path: /etc/byoh/bootstrap-kubeconfig.conf
+    permissions: 0644
+    owner: root
+    content: |
+      ${BOOTSTRAP_KUBECONFIG}
+  - path: /opt/setup-machine.sh
+    permissions: 0755
+    owner: root
+    content: |
+      ${SETUP_MACHINE_SCRIPT}
+runcmd:
+  - /opt/setup-machine.sh
+bootcmd:
+  - echo "Boot Completed!!!"

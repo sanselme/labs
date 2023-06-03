@@ -1,0 +1,52 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: harbor
+spec:
+  chart:
+    spec:
+      chart: bitnamicharts/harbor
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: docker
+        namespace: flux-system
+      version: 16.7.3
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  upgrade:
+    crds: CreateReplace
+  postRenderers:
+    - kustomize:
+        images:
+          - name: docker.io/bitnami/harbor-adapter-trivy
+          - name: docker.io/bitnami/harbor-core
+          - name: docker.io/bitnami/harbor-exporter
+          - name: docker.io/bitnami/harbor-jobservice
+          - name: docker.io/bitnami/harbor-notary-server
+          - name: docker.io/bitnami/harbor-notary-signer
+          - name: docker.io/bitnami/harbor-portal
+          - name: docker.io/bitnami/harbor-registry
+          - name: docker.io/bitnami/harbor-registryctl
+          - name: docker.io/bitnami/nginx
+          - name: docker.io/bitnami/os-shell
+          - name: docker.io/bitnami/postgresql

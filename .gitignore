@@ -185,13 +185,7 @@ Dockerfile.cross
 *.pub
 *.tar.gz
 *.tgz
-**/charts/*
 bin/
-build/*
-build/site/*
-deployment/site/*
-hack/*/*
-hack/kind.yaml
 
 # Allow
 !*.env.example
@@ -199,10 +193,3 @@ hack/kind.yaml
 !*.sops.pub
 !*.tpl
 !*cosign.pub
-!build/pkg/
-!deployment/site/bootstrap/
-!deployment/site/codecloud/
-!deployment/site/sandbox/
-!deployment/site/skiff/
-!deployment/site/wordpress/
-!hack/*/.gitkeep

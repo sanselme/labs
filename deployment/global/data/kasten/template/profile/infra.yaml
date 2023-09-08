@@ -1,0 +1,39 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: k10-ceph-infra-secret
+data:
+  ceph_keyring: ""
+  ceph_user: ""
+---
+kind: Profile
+apiVersion: config.kio.kasten.io/v1alpha1
+metadata:
+  name: k10-ceph-infra-profile
+spec:
+  type: Infra
+  infra:
+    type: Ceph
+    ceph:
+      monitor: 127.0.0.1:6789
+      pool: pool0
+    credential:
+      secretType: CephKeyring
+      secret:
+        name: k10-ceph-infra-secret

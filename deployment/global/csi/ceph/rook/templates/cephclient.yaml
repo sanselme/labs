@@ -1,0 +1,9 @@
+---
+apiVersion: ceph.rook.io/v1
+kind: CephClient
+metadata:
+  name: example
+spec:
+  caps:
+    mon: "profile rbd, allow r"
+    osd: "profile rbd pool=volumes, profile rbd pool=vms, profile rbd-read-only pool=images"

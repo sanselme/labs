@@ -8,22 +8,29 @@ plugins:
       uri: https://github.com/trunk-io/plugins
 runtimes:
   enabled:
+    - go@1.21.0
     - node@18.12.1
     - python@3.10.8
 lint:
   enabled:
+    - bandit@1.7.5
+    - black@23.9.1
+    - isort@5.12.0
+    - ruff@0.0.289
+    - shellcheck@0.9.0
+    - shfmt@3.6.0
     - actionlint@1.6.25
     - checkov@2.4.9
     - git-diff-check
     - markdownlint@0.36.0
     - prettier@3.0.3
     - trivy@0.45.0
-    - trufflehog@3.54.3
+    - trufflehog@3.55.1
     - yamllint@1.32.0
 actions:
   enabled:
     - trunk-announce
-    - trunk-fmt-pre-commit
     - trunk-upgrade-available
   disabled:
+    - trunk-fmt-pre-commit
     - trunk-check-pre-push

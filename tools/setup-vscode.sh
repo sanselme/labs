@@ -41,7 +41,7 @@ DEFAULT_EXTENSION_LIST=(
 
 # Install extensions execpt tunk.io for windows
 for extension in "${DEFAULT_EXTENSION_LIST[@]}"; do
-  if [[ "${OSTYPE}" == "msys" && "${extension}" == "trunk.io" ]]; then
+  if [[ ${OSTYPE} == "msys" && ${extension} == "trunk.io" ]]; then
     continue
   fi
 

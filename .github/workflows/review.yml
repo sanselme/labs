@@ -1,10 +1,17 @@
-name: Pull Request Review
+name: Review
 
 on:
-  pull_request: {}
+  pull_request:
+    types:
+      - edited
+      - opened
+      - reopened
+      - synchronize
 
 permissions: read-all
 
 jobs:
-  gate:
-    uses: labsonline/cicd/.github/workflows/review.yml@main
+  review:
+    uses: labsonline/cicd/.github/workflows/review.yml@424f749d3881c969d360beadb70ed8614066be03 # v0.1.2 https://github.com/labsonline/cicd/commit/424f749d3881c969d360beadb70ed8614066be03
+    permissions:
+      pull-requests: write

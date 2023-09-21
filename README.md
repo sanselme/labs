@@ -1,7 +1,5 @@
 # Readme
 
----
-
 [![OpenSSF Scorecard][ossf-score-badge]][ossf-score-link]
 [![Contiuos Integration][ci-badge]][ci-link]
 [![Review][review-badge]][review-link]
@@ -15,6 +13,48 @@
 [review-link]: https://github.com/sanselme/labs/actions/workflows/review.yml
 [releases-badge]: https://github.com/sanselme/labs/actions/workflows/release.yml/badge.svg
 [releases-link]: https://github.com/sanselme/labs/actions/workflows/release.yml
+
+---
+## Usage
+
+Install packages:
+
+- [docker](https://docs.docker.com/get-docker/)
+- [flux](https://fluxcd.io/docs/installation/)
+- [helm](https://helm.sh/docs/intro/install/)
+- [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+- [kustomize](https://kustomize.io/)
+
+Create a Kubernetes cluster
+
+[Install flux](#install), generate and apply manifests:
+
+```bash
+kustomize build "./deployment/site/${CLUSTER_NAME}/secrets" \
+| tee /tmp/secrets.yaml \
+| kubectl apply -f -
+
+# Optionaly, install cilium:
+kustomize build "./deployment/site/${CLUSTER_NAME}/cni" \
+| tee /tmp/cni.yaml \
+| kubectl apply -f -
+
+# Optionaly, install rook-ceph:
+kustomize build "./deployment/site/${CLUSTER_NAME}/csi" \
+| tee /tmp/csi.yaml \
+| kubectl apply -f -
+
+kustomize build "./deployment/site/${CLUSTER_NAME}" \
+| tee /tmp/site.yaml \
+| kubectl apply -f -
+```
+
+### Install
+
+```bash
+flux install --namespace=flux-system --components-extra="${FLUX_EXTRA_COMPONENTS}"
+```
 
 ---
 

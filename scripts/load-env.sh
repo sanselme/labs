@@ -82,5 +82,6 @@ gen_config_k0sctl() {
   [[ -z ${K0SCTL_CONFIG_FILE} ]] && echo "Usage: $0 <k0sctl-config-file>" && exit 1
 
   cp -f config/k0s/k0sctl.tpl "${K0SCTL_CONFIG_FILE}"
-  yq 'del(.spec.api.externalAddress)' "${K0SCTL_CONFIG_FILE}"
+  yq -i 'del(.spec.api.externalAddress)' "${K0SCTL_CONFIG_FILE}"
+  yq -i '(.. | select(tag == "!!str")) |= envsubst(nu)' "${K0SCTL_CONFIG_FILE}"
 }

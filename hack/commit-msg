@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+
+"""
+Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+"""
+
+import re
+import sys
+
+# from subprocess import check_output
+
+# Collect the parameters
+commit_msg_filepath = sys.argv[1]
+
+# FIXME: Figure out which branch we are on
+# branch = (
+#     check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).strip().decode("utf-8")
+# )
+# print("commit-msg: On branch: %s" % branch)
+
+# Check the commit message if we are on an issue branh
+# if branch.startswith("issue-"):
+#     issue_number = re.match("issue-(.*)", branch).group(1)
+#     print("commit-msg: Issue: %s" % issue_number)
+
+#     required_msg = "issue-%s\n\n" % issue_number
+
+#     with open(commit_msg_filepath, "r") as f:
+#         content = f.read()
+#         if not content.startswith(required_msg):
+#             print(
+#                 "commit-msg: The commit message does not start with the issue number."
+#             )
+#             print("commit-msg: Please use the following format:")
+#             print("commit-msg: %s" % required_msg)
+#             sys.exit(1)
+
+# Check for signed commit
+with open(commit_msg_filepath, "r") as f:
+    content = f.read()
+    if "Signed-off-by" not in content:
+        print("commit-msg: The commit message does not contain a Signed-off-by.")
+        print("commit-msg: Please use the following format:")
+        print("commit-msg: Signed-off-by: Your Name <email>")
+        sys.exit(1)
+
+# Remove duplicates of Signned-of-by if any
+with open(commit_msg_filepath, "r") as f:
+    content = f.read()
+    content = re.sub(
+        r"Signed-off-by: (.*)\nSigned-off-by: (.*)", r"Signed-off-by: \1", content
+    )
+    with open(commit_msg_filepath, "w") as f:
+        f.write(content)
+
+# TODO: Add commit id

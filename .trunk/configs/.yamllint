@@ -6,4 +6,9 @@ rules:
     forbid-in-block-mappings: true
     forbid-in-flow-mappings: true
   key-duplicates: {}
+  octal-values:
+    forbid-implicit-octal: true
   document-start: disable
+  line-length:
+    max: 200
+    level: warning

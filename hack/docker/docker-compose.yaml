@@ -1,0 +1,30 @@
+---
+version: "3.9"
+services:
+  k0s:
+    container_name: k0s
+    hostname: k0s
+    image: docker.io/k0sproject/k0s:v1.28.2-k0s.0
+    network_mode: bridge
+    privileged: true
+    command: |
+      k0s controller --config=/etc/k0s/config.yaml --single
+    ports:
+      - 6443:6443
+    tmpfs:
+      - /run
+      - /var/run
+    volumes:
+      - /var/lib/k0s
+      - type: bind
+        source: /sys/fs/cgroup
+        target: /sys/fs/cgroup
+      - type: bind
+        source: ./cluster.yaml
+        target: /etc/k0s/config.yaml
+      - type: bind
+        source: ../lbpool.yaml
+        target: /var/lib/k0s/manifests/lbpool.yaml
+      - type: bind
+        source: ../l2announcement.yaml
+        target: /var/lib/k0s/manifests/l2announcement.yaml

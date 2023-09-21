@@ -1,0 +1,10 @@
+*.*
+*/**
+!.gitignore
+!*/.gitkeep
+!boilerplate.txt
+!docker/docker-compose.yaml
+!flux/
+!l2announcement.yaml
+!lbpool.yaml
+!pkg.txt

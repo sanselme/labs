@@ -8,3 +8,5 @@ spaces: false
 url: false
 whitespace: false
 headings: false
+line-length:
+  line_length: 400

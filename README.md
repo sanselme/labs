@@ -8,11 +8,11 @@
 [![Releases][releases-badge]][releases-link]
 
 [ossf-score-badge]: https://api.securityscorecards.dev/projects/github.com/sanselme/labs/badge
-[ossf-score-link]: (https://securityscorecards.dev/viewer/?uri=github.com/sanselme/labs)
+[ossf-score-link]: https://securityscorecards.dev/viewer/?uri=github.com/sanselme/labs
 [ci-badge]: https://github.com/sanselme/labs/actions/workflows/cicd.yml/badge.svg
 [ci-link]: https://github.com/sanselme/labs/actions/workflows/cicd.yml
-[review-badge]: https://github.com/sanselme/labs/actions/workflows/required/sanselme/cicd/.github/workflows/review.yml/badge.svg
-[review-link]: (https://github.com/sanselme/labs/actions/workflows/required/sanselme/cicd/.github/workflows/review.yml)
+[review-badge]: https://github.com/sanselme/labs/actions/workflows/required/labsonline/cicd/.github/workflows/_prw.yml/badge.svg
+[review-link]: (https://github.com/sanselme/labs/actions/workflows/required/labsonline/cicd/.github/workflows/_prw.yml)
 [releases-badge]: https://github.com/sanselme/labs/actions/workflows/release.yml/badge.svg
 [releases-link]: https://github.com/sanselme/labs/actions/workflows/release.yml
 

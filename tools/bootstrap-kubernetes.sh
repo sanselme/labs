@@ -20,6 +20,12 @@ set -e
 
 source scripts/load-env.sh
 
+# generate k0s config
+gen_config_k0s /tmp/k0s.yaml
+
+# generate k0sctl config
+gen_config_k0sctl "${CONFIG_FILE}"
+
 # create multipass vm
 multipass launch jammy \
   -c "${MULTIPASS_CPU_COUNT}" \

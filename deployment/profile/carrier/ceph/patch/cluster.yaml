@@ -44,8 +44,6 @@ spec:
         count: 1
       mgr:
         count: 1
-      dashboard:
-        ssl: false
       resources:
         cleanup:
           limits: {}
@@ -82,7 +80,7 @@ spec:
         storageClass:
           enabled: true
           name: ceph-block
-          isDefault: true
+          isDefault: false
           reclaimPolicy: Delete
           allowVolumeExpansion: true
           volumeBindingMode: "Immediate"

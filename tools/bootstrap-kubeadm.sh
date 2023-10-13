@@ -16,7 +16,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 : "${AQUA_REPO:=https://aquasecurity.github.io/helm-charts/}"
-: "${BITNAMI:=oci://registry-1.docker.io/bitnamicharts}"
+: "${BITNAMI:=https://charts.bitnami.com/bitnami}"
 : "${CILIUM_REPO:=https://helm.cilium.io/}"
 : "${CM_REPO:=https://charts.jetstack.io/}"
 : "${OPENEBS_REPO:=https://openebs.github.io/charts/}"
@@ -31,8 +31,8 @@
 
 # Generate cilium config
 cat <<EOF >/tmp/cilium.yaml
- l2announcements:
-      enabled: true
+l2announcements:
+    enabled: true
 ingressController:
     enabled: true
 exteranlIPs:
@@ -48,9 +48,6 @@ helm upgrade cilium \
   --repo "${CILIUM_REPO}" \
   --values /tmp/cilium.yaml \
   --version "${CILIUM_VERSION}"
-sleep 15
-kubectl apply -f hack/lbpool.yaml
-kubectl apply -f hack/l2announcement.yaml
 
 # Install openebs
 helm upgrade openebs \
@@ -70,8 +67,8 @@ helm upgrade cert-manager \
   --set installCRDs=true \
   --version "${CM_VERSION}"
 helm upgrade trust-manager \
-  --install cert-manager \
-  --namespace trust-manager \
+  --install trust-manager \
+  --namespace cert-manager \
   --repo "${CM_REPO}" \
   --version "${TM_VERSION}"
 
@@ -99,3 +96,7 @@ helm upgrade flux \
   --namespace sre \
   --repo "${BITNAMI}" \
   --version "${FLUX_VERSION}"
+
+sleep 15
+kubectl apply -f hack/lbpool.yaml
+kubectl apply -f hack/l2announcement.yaml

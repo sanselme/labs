@@ -50,11 +50,13 @@ create_kind_cluster() {
 
   [[ -z ${CLUSTER_NAME} ]] && export CLUSTER_NAME="kind"
 
-  if [[ -z $(kind get clusters | grep ${CLUSTER_NAME}) ]]; then
+  if [[ -z $(kind get clusters | grep "${CLUSTER_NAME}") ]]; then
     echo "Creating kind cluster ${CLUSTER_NAME}..."
-    [[ -z ${CLUSTER_CONFIG} ]] &&
-      kind create cluster --name "${CLUSTER_NAME}" ||
+    if [[ -z ${CLUSTER_CONFIG} ]]; then
+      kind create cluster --name "${CLUSTER_NAME}"
+    else
       kind create cluster --name "${CLUSTER_NAME}" --config "${CLUSTER_CONFIG}"
+    fi
     sleep 15
   fi
 

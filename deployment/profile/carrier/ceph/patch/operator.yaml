@@ -26,6 +26,7 @@ spec:
     resources:
       limits: {}
       requests: {}
+    allowLoopDevices: false
     csi:
       provisionerReplicas: 1
       csiCephFSPluginResource: |

@@ -24,6 +24,7 @@
 : "${CILIUM_VERSION:=1.14.1}"
 : "${CM_VERSION:=v1.12.3}"
 : "${FLUX_VERSION:=}"
+: "${MS_VERSION:=6.4.5}"
 : "${OPENEBS_VERSION:=}"
 : "${PROM_VERSION:=8.18.0}"
 : "${TM_VERSION:=v0.6.0}"
@@ -56,7 +57,7 @@ helm upgrade openebs \
   --repo "${OPENEBS_REPO}" \
   --set localprovisioner.hostpathClass.enabled=true,localprovisioner.hostpathClass.isDefaultClass=true \
   --version "${OPENEBS_VERSION}"
-kubectl annotate storageclass openebs-hostpath storageclass.kubernetes.io/is-default-class="true"
+kubectl annotate storageclass openebs-hostpath storageclass.kubernetes.io/is-default-class="true" --overwrite
 
 # Install cert-manager & trust-manager
 helm upgrade cert-manager \
@@ -80,6 +81,13 @@ helm upgrade prometheus \
   --repo "${BITNAMI}" \
   --set prometheus.scrapeInterval="",prometheus.evaluationInterval="" \
   --version "${PROM_VERSION}"
+
+# Install metrics-server
+helm upgrade metrics-server \
+  --install metrics-server \
+  --namespace observability \
+  --repo "${BITNAMI}" \
+  --version "${MS_VERSION}"
 
 # Install trivy-operator
 helm upgrade trivy \

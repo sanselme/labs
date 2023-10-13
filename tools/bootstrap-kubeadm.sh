@@ -31,23 +31,12 @@
 
 # Generate cilium config
 cat <<EOF >/tmp/cilium.yaml
-securityContext:
-    privileged: true
-containerRuntime:
-    integration: auto
+ l2announcements:
+      enabled: true
 ingressController:
-    enabled: true
-    enforceHttps: true
-    loadbalancerMode: shared
-    secretsNamespace:
-    create: false
-    name: kube-system
-hostFirewall:
     enabled: true
 exteranlIPs:
     enabled: true
-ipam:
-    mode: kubernetes
 operator:
     replicas: 1
 EOF
@@ -59,6 +48,9 @@ helm upgrade cilium \
   --repo "${CILIUM_REPO}" \
   --value /tmp/cilium.yaml \
   --version "${CILIUM_VERSION}"
+sleep 15
+kubectl apply -f hack/lbpool.yaml
+kubectl apply -f hack/l2announcement.yaml
 
 # Install openebs
 helm upgrade openebs \

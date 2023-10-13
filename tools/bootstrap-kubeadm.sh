@@ -46,7 +46,7 @@ helm upgrade cilium \
   --install cilium \
   --namespace kube-system \
   --repo "${CILIUM_REPO}" \
-  --value /tmp/cilium.yaml \
+  --values /tmp/cilium.yaml \
   --version "${CILIUM_VERSION}"
 sleep 15
 kubectl apply -f hack/lbpool.yaml

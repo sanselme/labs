@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-PKGS=("cri-tools" "kubernetes-cni" "kubectl" "kubelet" "kubeadm")
+PKGS=("cri-tools" "kubernetes-cni" "kubectl" "kubelet" "kubeadm" "ipvsadm")
 
 curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg |
   sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg

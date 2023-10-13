@@ -23,16 +23,16 @@
 
 for i in {1..3}; do
   # create raw devices if they don't exist
-  if [[ -s "rook-ceph-${i}.img" ]]; then
+  if [[ -s "/srv/rook-ceph-${i}.img" ]]; then
     echo "raw device already exists"
   else
-    dd if=/dev/zero of="rook-ceph-${i}.img" bs=1M count="${CEPH_LOOPDEV_SIZE_MB}"
+    dd if=/dev/zero of="/srv/rook-ceph-${i}.img" bs=1M count="${CEPH_LOOPDEV_SIZE_MB}"
   fi
 
   # create loop devices if they don't exist
-  if [[ -b "/dev/loop${i}" ]]; then
+  if [[ -b "/dev/loop10${i}" ]]; then
     echo "loop device already exists"
   else
-    losetup "/dev/loop${i}" "rook-ceph-${i}.img"
+    losetup "/dev/loop10${i}" "/srv/rook-ceph-${i}.img"
   fi
 done

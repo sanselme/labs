@@ -15,16 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+ARCH=$(uname -m)
 VER=$(curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest | grep tag_name | cut -d '"' -f 4 | sed 's/v//g')
 echo installing cri-docker "${VER}"
 
 ### For Intel 64-bit CPU ###
-wget "https://github.com/Mirantis/cri-dockerd/releases/download/v${VER}/cri-dockerd-${VER}.amd64.tgz"
-tar xvf "cri-dockerd-${VER}.amd64.tgz"
+[[ "${ARCH}" == "x86_64" ]] &&
+  wget "https://github.com/Mirantis/cri-dockerd/releases/download/v${VER}/cri-dockerd-${VER}.amd64.tgz"
+  tar xvf "cri-dockerd-${VER}.amd64.tgz"
 
 ### For ARM 64-bit CPU ###
-# wget "https://github.com/Mirantis/cri-dockerd/releases/download/v${VER}/cri-dockerd-${VER}.arm64.tgz"
-# tar xvf "cri-dockerd-${VER}.arm64.tgz"
+[[ "${ARCH}" == "aarch64" ]] &&
+  wget "https://github.com/Mirantis/cri-dockerd/releases/download/v${VER}/cri-dockerd-${VER}.arm64.tgz"
+  tar xvf "cri-dockerd-${VER}.arm64.tgz"
 
 sudo mv cri-dockerd/cri-dockerd /usr/local/bin/
 cri-dockerd --version

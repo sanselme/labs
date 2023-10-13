@@ -28,7 +28,7 @@ yq -i '.networking.disableDefaultCNI = true' "${CONFIG_FILE}"
 create_kind_cluster "${CLUSTER_NAME}" "${CONFIG_FILE}"
 
 # install cilium
-CILIUM_STATUS_COUNT="$(cilium status | grep OK | wc -l | tr -d " ")"
+CILIUM_STATUS_COUNT="$(cilium status | grep -c OK | tr -d " ")"
 [[ ${CILIUM_STATUS_COUNT} -lt 2 ]] &&
   cilium install \
     --version "${CILIUM_VERSION}" \

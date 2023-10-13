@@ -73,7 +73,7 @@ gen_config_k0s() {
 
   yq -i 'del(.spec.api.externalAddress)' "${K0S_CONFIG_FILE}"
   yq -i 'del(.spec.api.extraArgs)' "${K0S_CONFIG_FILE}"
-  yq '.metadata.name = "docker"' "${K0S_CONFIG_FILE}"
+  yq -i '.metadata.name = "docker"' "${K0S_CONFIG_FILE}"
 }
 
 # generate k0sctl config

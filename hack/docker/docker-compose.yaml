@@ -4,7 +4,7 @@ services:
   k0s:
     container_name: k0s
     hostname: k0s
-    image: docker.io/k0sproject/k0s:v1.26.8-k0s.0
+    image: docker.io/k0sproject/k0s:v1.28.2-k0s.0
     network_mode: bridge
     privileged: true
     command: |

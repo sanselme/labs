@@ -33,7 +33,23 @@ multipass launch jammy \
   -d "${MULTIPASS_DISK_SIZE_GB}g" \
   -n kubernetes
 
-# create cluster with k0sctl
+CLUSTER_NAME="kubernetes"
+K0S_IPADDR="$(multipass info kubernetes | awk '/IPv4/ { print $2 }')"
+SSH_PUB_KEY_FILE="${HOME}/.ssh/id_ed25519.pub"
+K0S_USERNAME=ubuntu
+export \
+  CLUSTER_NAME \
+  K0S_IPADDR \
+  SSH_PUB_KEY_FILE \
+  K0S_USERNAME
+
+# generate k0s config
+gen_config_k0s /tmp/k0s.yaml
+
+# generate k0sctl config
+gen_config_k0sctl "${CONFIG_FILE}"
+
+# FIXME: create cluster with k0sctl
 k0sctl apply --config "${CONFIG_FILE}"
 
 # deploy workload

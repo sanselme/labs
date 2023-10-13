@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
-set -e
+set -ex
 
 source scripts/load-env.sh
 
@@ -48,7 +48,7 @@ SETUP_MACHINE_SCRIPT="$(cat scripts/setup-machine.sh)"
 export BOOTSTRAP_KUBECONFIG BYOH_HOSTAGENT_SERVICE BYOH_HOSTAGENT_WATCHER_PATH BYOH_HOSTAGENT_WATCHER_SERVICE SETUP_MACHINE_SCRIPT
 
 extrafile_content="$(cat scripts/setup-ceph-loopdev.sh)"
-extrafile='{path: /opt/setup-ceph-loopdev.sh, permissions: 0755, owner: root, content: $extrafile_content}'
+extrafile="{path: /opt/setup-ceph-loopdev.sh, permissions: 0755, owner: root, content: ${extrafile_content}}"
 export extrafile_content extrafile
 
 yq -i '.users[].ssh_authorized_keys = env(SSH_PUB_KEY)' "${CLOUD_INIT_FILE}"
@@ -90,10 +90,10 @@ for i in {1..3}; do
   NETPLAN_FILE="hack/multipass/50-cloud-init.${MULTIPASS_NAME_PREFIX}-0${i}.yaml"
 
   cp -f config/custom-networking.tpl "${NETPLAN_FILE}"
-  multipass exec "${MULTIPASS_NAME_PREFIX}-0${i}" -- cat /etc/netplan/50-cloud-init.yaml >/tmp/50-cloud-init.${MULTIPASS_NAME_PREFIX}-0${i}.yaml
+  multipass exec "${MULTIPASS_NAME_PREFIX}-0${i}" -- cat /etc/netplan/50-cloud-init.yaml >"/tmp/50-cloud-init.${MULTIPASS_NAME_PREFIX}-0${i}.yaml"
 
-  OAM_MACADDR="$(yq '.network.ethernets.default.match.macaddress' /tmp/50-cloud-init.${MULTIPASS_NAME_PREFIX}-0${i}.yaml)"
-  ETH1_MACADDR="$(yq '.network.ethernets.extra0.match.macaddress' /tmp/50-cloud-init.${MULTIPASS_NAME_PREFIX}-0${i}.yaml)"
+  OAM_MACADDR="$(yq '.network.ethernets.default.match.macaddress' "/tmp/50-cloud-init.${MULTIPASS_NAME_PREFIX}-0${i}.yaml")"
+  ETH1_MACADDR="$(yq '.network.ethernets.extra0.match.macaddress' "/tmp/50-cloud-init.${MULTIPASS_NAME_PREFIX}-0${i}.yaml")"
   export OAM_MACADDR ETH1_MACADDR
 
   yq -i 'del(.network.bonds.bond0.macaddress)' "${NETPLAN_FILE}"

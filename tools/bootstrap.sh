@@ -36,7 +36,7 @@ yq -i '.networking.apiServerAddress = env(ipaddr)' hack/kind.yaml
 create_kind_cluster "${CLUSTER_NAME}" hack/kind.yaml
 
 # install cilium if not present
-CILIUM_STATUS_COUNT="$(cilium status | grep OK | wc -l | tr -d " ")"
+CILIUM_STATUS_COUNT="$(cilium status | grep -c OK | tr -d " ")"
 if [[ ${CILIUM_STATUS_COUNT} -lt 2 ]]; then
   echo "Installing cilium..."
   cilium install --version "${CILIUM_VERSION}" --wait
@@ -47,7 +47,7 @@ if [[ ${CILIUM_STATUS_COUNT} -lt 2 ]]; then
 fi
 
 # install cert-manager if not present
-CERT_MANAGER_STATUS_COUNT="$(kubectl get pods --namespace cert-manager | grep Running | wc -l | tr -d " ")"
+CERT_MANAGER_STATUS_COUNT="$(kubectl get pods --namespace cert-manager | grep -c Running | tr -d " ")"
 if [[ ${CERT_MANAGER_STATUS_COUNT} -lt 3 ]]; then
   echo "Installing cert-manager..."
   helm upgrade cert-manager \

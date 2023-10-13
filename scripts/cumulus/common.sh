@@ -27,11 +27,11 @@ net add loopback lo ip address "${LO_ADDR}/32"
 
 # configure management interface
 net add interface eth0 vrf mgmt
-net add interface eth0 ip address ${MGMT_ADDR_CIDR}
+net add interface eth0 ip address "${MGMT_ADDR_CIDR}"
 
 # configure evpn tenant vrf
 net add vrf "${TENANT_NAME}" vrf-table auto
 net add vrf "${TENANT_NAME}" vni "${L3_VNI}"
 
 # create l3 vni
-net add vlan ${L3_VLAN} vrf "${TENANT_NAME}"
+net add vlan "${L3_VLAN}" vrf "${TENANT_NAME}"

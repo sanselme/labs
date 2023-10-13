@@ -1,0 +1,9 @@
+curl
+frr
+golang-cfssl
+strongswan
+wireguard
+
+maas
+netbox
+vault

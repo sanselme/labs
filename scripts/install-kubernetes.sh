@@ -26,6 +26,4 @@ echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] \
 
 # install packages
 sudo apt update -y
-for pkg in ${PKG[@]}; do
-  sudo apt install -y "${pkg}" && sudo apt-mark hold "${pkg}"
-done
+sudo apt install -y "${PKGS[@]}" && sudo apt-mark hold "${PKGS[@]}"

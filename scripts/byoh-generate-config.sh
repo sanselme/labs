@@ -19,13 +19,13 @@ TARGET_CLUSTER_NAME="${1}"
 [[ -z ${TARGET_CLUSTER_NAME} ]] && echo "Usage: $0 <target-cluster-name>" && exit 1
 
 # generate bootstrap-kubeconfig.yaml & apply it to mgmt cluster
-cp -f deployment/global/capi/template/bootstrapkubeconfig.yaml hack/kubernetes/bootstrap-kubeconfig.yaml
+cp -f deployment/global/capi/template/bootstrapkubeconfig.yaml hack/multipass/bootstrap-kubeconfig.yaml
 
-yq -i 'del(.spec.insecure-skip-tls-verify)' hack/kubernetes/bootstrap-kubeconfig.yaml
-yq -i '.spec.apiserver = env(APISERVER)' hack/kubernetes/bootstrap-kubeconfig.yaml
-yq -i '.spec.certificate-authority-data = env(CA_CERT)' hack/kubernetes/bootstrap-kubeconfig.yaml
+yq -i 'del(.spec.insecure-skip-tls-verify)' hack/multipass/bootstrap-kubeconfig.yaml
+yq -i '.spec.apiserver = env(APISERVER)' hack/multipass/bootstrap-kubeconfig.yaml
+yq -i '.spec.certificate-authority-data = env(CA_CERT)' hack/multipass/bootstrap-kubeconfig.yaml
 
-kubectl apply -f hack/kubernetes/bootstrap-kubeconfig.yaml
+kubectl apply -f hack/multipass/bootstrap-kubeconfig.yaml
 
 # generate bootstrap-kubeconfig.conf
 sleep 30

@@ -14,25 +14,35 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
-set -e
+set -ex
 
 : "${DOCKER_COMPOSE_FILE:="hack/docker/docker-compose.yaml"}"
 
+source scripts/load-env.sh
+
 # generate cluster config
-k0s-generate-config.sh hack/docker/cluster.yaml
+gen_config_k0s hack/docker/cluster.yaml
 
 # docker-compose up
 docker-compose -f "${DOCKER_COMPOSE_FILE}" up -d --wait
 
 # export kubeconfig
+sleep 15
 docker-compose -f "${DOCKER_COMPOSE_FILE}" exec k0s cat /var/lib/k0s/pki/admin.conf >"hack/docker/kubeconfig.yaml"
+export KUBECONFIG="hack/docker/kubeconfig.yaml"
+
+# install cilium if not present
+CILIUM_STATUS_COUNT="$(cilium status | grep -c OK | tr -d " ")"
+if [[ ${CILIUM_STATUS_COUNT} -lt 2 ]]; then
+  echo "Installing cilium..."
+  cilium install --version "${CILIUM_VERSION}" --wait
+fi
 
 # apply lbpool & l2announcement
-if [[ $(cilium status | grep OK | wc -l | tr -d " ") -gt 2 ]]; then
-  kubectl apply -f hack/lbpool.yaml
-  kubectl apply -f hack/l2announcement.yaml
-fi
+sleep 30
+kubectl apply -f hack/lbpool.yaml
+kubectl apply -f hack/l2announcement.yaml
 
 # deploy workload
 kustomize build deployment/site/wordpress >/tmp/wordpress.yaml
-kubectl apply -f /tmp/wordpress.yaml
+kubectl --kubeconfig hack/docker/kubeconfig.yaml apply -f /tmp/wordpress.yaml

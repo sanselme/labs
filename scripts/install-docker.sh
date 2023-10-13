@@ -31,7 +31,7 @@ PKGS=(
   "docker-compose-plugin"
 )
 
-for pkg in ${OLD_PKGS[@]}; do
+for pkg in "${OLD_PKGS[@]}"; do
   sudo apt remove -y "${pkg}"
 done
 
@@ -41,10 +41,10 @@ sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
 # add docker repository
 echo \
-  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
   https://download.docker.com/linux/ubuntu \
-  "$(. /etc/os-release && echo "${VERSION_CODENAME}")" stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+  $(. /etc/os-release && echo ${VERSION_CODENAME}) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 
 # install packages
 sudo apt update -y
-sudo apt install -y "${PKGS}"
+sudo apt install -y "${PKGS[@]}"

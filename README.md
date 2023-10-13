@@ -1,10 +1,13 @@
 # Readme
 
+[![OpenSSF Best Practices][ossf-best-practice-badge]][ossf-best-practice-link]
 [![OpenSSF Scorecard][ossf-score-badge]][ossf-score-link]
 [![Contiuos Integration][ci-badge]][ci-link]
 [![Review][review-badge]][review-link]
 [![Releases][releases-badge]][releases-link]
 
+[ossf-best-practice-badge]: https://www.bestpractices.dev/projects/7948/badge
+[ossf-best-practice-link]: https://www.bestpractices.dev/projects/7948
 [ossf-score-badge]: https://api.securityscorecards.dev/projects/github.com/sanselme/labs/badge
 [ossf-score-link]: https://securityscorecards.dev/viewer/?uri=github.com/sanselme/labs
 [ci-badge]: https://github.com/sanselme/labs/actions/workflows/cicd.yml/badge.svg

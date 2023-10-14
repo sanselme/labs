@@ -1,0 +1,69 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8sexternaldatacosign
+  annotations:
+    description: >-
+      K8sExternalDataCosign is a constraint that validates that a container
+      image is signed by a trusted signer.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sExternalDataCosign
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties: {}
+          required: []
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sexternaldatacosign
+
+        violation[{"msg": msg}] {
+          # Used on kind: Deployment/StatefulSet/DaemonSet
+          images := [img | img = input.review.object.spec.template.spec.containers[_].image]
+
+          # Send external data request. We specify the image names as "cosign-gatekeeper-provider"
+          response := external_data({"provider": "cosign-gatekeeper-provider", "keys": images})
+
+          response_with_error(response)
+          msg := sprintf("Invalid response %v", [response])
+        }
+
+        violation[{"msg": msg}] {
+          # Used on kind: Pod
+          images := [img | img = input.review.object.spec.containers[_].image]
+
+          # Send external data request.
+          response := external_data({"provider": "cosign-gatekeeper-provider", "keys": images})
+
+          response_with_error(response)
+          msg := sprintf("Invalid response %v", [response])
+        }
+
+        response_with_error(response) {
+          count(response.errors) > 0
+          errs := response.errors[_]
+          constains(errs[1], "_invalid")
+        }
+
+        response_with_error(response) {
+          count(response.system_errors) > 0
+        }

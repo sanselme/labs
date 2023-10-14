@@ -50,6 +50,7 @@ create_kind_config() {
 create_kind_cluster() {
   CLUSTER_NAME="${CLUSTER_NAME:-$1}"
   CLUSTER_CONFIG="${CLUSTER_CONFIG:-$2}"
+  NO_STANDARD_SC="${NO_STANDARD_SC:-$3}"
 
   [[ -z ${CLUSTER_NAME} ]] && export CLUSTER_NAME="kind"
 
@@ -66,6 +67,9 @@ create_kind_cluster() {
   kubectl cluster-info
   kubectl get node -o wide
   kubectl get pod -o wide -A
+
+  # FIXME: remove sandard storageclass if requested
+  [[ -n ${NO_STANDARD_SC} ]] && kubectl delete storageclass standard
 }
 
 # install cilium

@@ -33,6 +33,7 @@ docker container exec -it "${CONTAINER_NAME}" /setup-ceph-loopdev.sh
 # NS="rook-ceph"
 # POD="$(kubectl get pod -n "${NS}" | awk '/rook-ceph-tools/ { print $1 }')"
 
+# FIXME: rook module not being enabled (bug?)
 # sleep 15
 # kubectl exec -n "${NS}" "${POD}" -- ceph mgr module enable rook
 # kubectl exec -n "${NS}" "${POD}" -- ceph orch set backend rook

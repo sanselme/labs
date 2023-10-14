@@ -17,6 +17,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: rook-ceph
 components:
+  - ../../../global/certmanager/issuer
   - ../../../global/csi/ceph/rook/cluster
 resources:
   - ../../../global/csi/addons
@@ -25,4 +26,12 @@ resources:
   - namespace.yaml
 patches:
   - path: patch/cluster.yaml
+  - path: patch/issuer.yaml
   - path: patch/operator.yaml
+  - patch: |-
+      - op: replace
+        path: /metadata/name
+        value: ceph-ca-issuer
+    target:
+      kind: HelmRelease
+      name: issuer

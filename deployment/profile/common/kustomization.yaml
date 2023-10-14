@@ -18,4 +18,5 @@ kind: Kustomization
 resources:
   - certmanager
   - cilium
+  - observability
   - sre

@@ -15,14 +15,14 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-resources:
-  - ../../profile/common
-  - ../../profile/carrier/ceph
-  - ../../profile/carrier/observability
+namespace: observability
+components:
+  - ../../../global/data/memcached
+  - ../../../global/observability/grafana
+  - ../../../global/observability/loki
+  - ../../../global/observability/tempo
 patches:
-  - path: patch/cilium.yaml
-  - path: patch/default-clusterissuer.yaml
-  - path: patch/docker.yaml
-  - path: patch/flux.yaml
-  - path: patch/rook-ceph-cluster.yaml
-  - path: patch/rook-ceph-operator.yaml
+  - path: patch/grafana.yaml
+  - path: patch/loki.yaml
+  - path: patch/memcached.yaml
+  - path: patch/tempo.yaml

@@ -1,0 +1,83 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: tempo
+spec:
+  dependsOn:
+    - name: memcached
+    - name: prometheus
+  values:
+    global:
+      storageClass: ceph-block
+    tempo:
+      traces:
+        jaeger:
+          grpc: true
+          thriftBinary: true
+          thriftCompact: true
+          thriftHttp: true
+        otlp:
+          http: true
+          grpc: true
+        opencensus: true
+        zipkin: true
+      overridesConfiguration: |
+        overrides: {}
+    compactor:
+      resources:
+        limits: {}
+        requests: {}
+    distributor:
+      resources:
+        limits: {}
+        requests: {}
+    metricsGenerator:
+      resources:
+        limits: {}
+        requests: {}
+    ingester:
+      resources:
+        limits: {}
+        requests: {}
+    querier:
+      resources:
+        limits: {}
+        requests: {}
+    queryFrontend:
+      resources:
+        limits: {}
+        requests: {}
+      query:
+        resources:
+          limits: {}
+          requests: {}
+    vulture:
+      enabled: true
+      resources:
+        limits: {}
+        requests: {}
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        namespace: ""
+    externalMemcached:
+      host: memcached
+      port: 11211
+    memcached:
+      enabled: false

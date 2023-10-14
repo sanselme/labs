@@ -13,15 +13,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ../../profile/common
-  - ../../profile/carrier/ceph
-patches:
-  - path: patch/cilium.yaml
-  - path: patch/default-clusterissuer.yaml
-  - path: patch/docker.yaml
-  - path: patch/flux.yaml
-  - path: patch/rook-ceph-cluster.yaml
-  - path: patch/rook-ceph-operator.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert
+spec:
+  isCA: false
+  secretName: cert
+  commonName: cert.default.svc.cluster.local
+  dnsNames:
+    - cert
+    - cert.default
+    - cert.default.svc
+    - cert.default.svc.cluster.local
+  issuerRef:
+    name: ca
+    kind: ClusterIssuer

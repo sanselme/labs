@@ -18,6 +18,8 @@ kind: HelmRelease
 metadata:
   name: cilium
 spec:
+  dependsOn:
+    - name: cilium-ca-issuer
   values:
     bandwidthManager:
       bbr: false
@@ -26,5 +28,42 @@ spec:
       leaseDuration: 3s
       leaseRenewDeadline: 1s
       leaseRetryPeriod: 500ms
-    operator:
-      replicas: 1
+    securityContext:
+      privileged: true
+    bgpControlPlane:
+      enabled: true
+    pmtuDiscovery:
+      enabled: true
+    containerRuntime:
+      integration: auto
+    ingressController:
+      enabled: true
+      enforceHttps: true
+      secretsNamespace:
+        create: false
+        name: kube-system
+    encryption:
+      enabled: false
+      type: wireguard
+    externalIPs:
+      enabled: true
+    hostFirewall:
+      enabled: true
+    hubble:
+      relay:
+        enabled: true
+    ipam:
+      mode: kubernetes
+    monitor:
+      enabled: true
+    loadBalancer:
+      mode: dsr
+      serviceTopology: true
+      algorithm: maglev
+      l7:
+        backend: envoy
+    proxy:
+      prometheus:
+        enabled: true
+    tunnel: disabled
+    # routingMode: native

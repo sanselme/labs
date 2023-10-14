@@ -13,15 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ../../profile/common
-  - ../../profile/carrier/ceph
-patches:
-  - path: patch/cilium.yaml
-  - path: patch/default-clusterissuer.yaml
-  - path: patch/docker.yaml
-  - path: patch/flux.yaml
-  - path: patch/rook-ceph-cluster.yaml
-  - path: patch/rook-ceph-operator.yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: jetstack
+spec:
+  interval: 1m0s
+  url: https://charts.jetstack.io/

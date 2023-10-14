@@ -18,4 +18,6 @@ kind: Kustomization
 resources:
   - ../../profile/common
 patches:
+  - path: patch/cilium.yaml
   - path: patch/docker.yaml
+  - path: patch/flux.yaml

@@ -14,10 +14,10 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
 apiVersion: v1
-kind: Secret
+kind: Namespace
 metadata:
-  name: docker-registry
-  namespace: sre
-data:
-  username: ""
-  password: ""
+  name: sre
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline

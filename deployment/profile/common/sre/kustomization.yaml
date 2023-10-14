@@ -13,11 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: docker-registry
-  namespace: sre
-data:
-  username: ""
-  password: ""
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sre
+resources:
+  - ../../../global/sre/flux
+  - ../../../global/sre/source
+  - namespace.yaml
+patches:
+  - path: patch/flux.yaml

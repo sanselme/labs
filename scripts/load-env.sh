@@ -19,6 +19,8 @@ CILIUM_VERSION="$(yq '.spec.chart.spec.version' deployment/global/cni/cilium/rel
 FLUX_VERSION="$(yq '.spec.chart.spec.version' deployment/global/sre/flux/release.yaml)"
 export CILIUM_VERSION FLUX_VERSION
 
+export BITNAMI="oci://registry-1.docker.io/bitnamicharts"
+
 # verify dependencies are installed
 CILIUM_CMD="$(command -v cilium)"
 DOCKER_CMD="$(command -v docker)"
@@ -67,4 +69,13 @@ install_cilium() {
       --values "${CILIUM_VALUES}" \
       --version "${CILIUM_VERSION}" \
       --wait && sleep 15 || echo "Cilium is already installed!!!"
+}
+
+# install flux
+install_flux() {
+  helm upgrade flux \
+    --create-namespace \
+    --install "${BITNAMI}/flux" \
+    --namespace sre \
+    --version "${FLUX_VERSION}"
 }

@@ -19,6 +19,9 @@ CILIUM_VERSION="$(yq '.spec.chart.spec.version' deployment/global/cni/cilium/rel
 FLUX_VERSION="$(yq '.spec.chart.spec.version' deployment/global/sre/flux/release.yaml)"
 export CILIUM_VERSION FLUX_VERSION
 
+export CLUSTER_NAME="sandbox"
+export CONFIG_FILE="hack/kind.yaml"
+
 export BITNAMI="oci://registry-1.docker.io/bitnamicharts"
 
 # verify dependencies are installed
@@ -33,6 +36,15 @@ KUBECTL_CMD="$(command -v kubectl)"
 [[ -z ${HELM_CMD} ]] && echo "helm is not installed" && exit 1
 [[ -z ${KIND_CMD} ]] && echo "kind is not installed" && exit 1
 [[ -z ${KUBECTL_CMD} ]] && echo "kubectl is not installed" && exit 1
+
+# create kind config if not present
+create_kind_config() {
+  DEFAULT_CNI=${1}
+  [[ -z ${DEFAULT_CNI} ]] && DEFAULT_CNI=true
+
+  [[ ! -f ${CONFIG_FILE} ]] && cp -f config/kind.yaml "${CONFIG_FILE}"
+  [[ -n ${DEFAULT_CNI} ]] && yq -i '.networking.disableDefaultCNI = true' "${CONFIG_FILE}"
+}
 
 # create kind cluster if not present
 create_kind_cluster() {

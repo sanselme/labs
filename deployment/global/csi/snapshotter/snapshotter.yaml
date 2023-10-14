@@ -1,0 +1,70 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: csi-snapshotter-crd
+spec:
+  interval: 1m0s
+  path: client/config/crd
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: kcsi
+  timeout: 2m0s
+  wait: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: csi-snapshotter-controller
+spec:
+  interval: 1m0s
+  path: deploy/kubernetes/snapshot-controller
+  prune: true
+  dependsOn:
+    - name: csi-snapshotter-crd
+  images:
+    - name: registry.k8s.io/sig-storage/csi-provisioner
+      newTag: v3.5.0
+    - name: registry.k8s.io/sig-storage/csi-snapshotter
+      newTag: v6.2.2
+    - name: registry.k8s.io/sig-storage/hostpathplugin
+  sourceRef:
+    kind: GitRepository
+    name: kcsi
+  timeout: 2m0s
+  wait: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: csi-snapshotter
+spec:
+  interval: 1m0s
+  path: deploy/kubernetes/csi-snapshotter
+  prune: true
+  targetNamespace: kube-system
+  dependsOn:
+    - name: csi-snapshotter-crd
+  images:
+    - name: registry.k8s.io/sig-storage/snapshot-controller
+      newTag: v6.2.2
+  sourceRef:
+    kind: GitRepository
+    name: kcsi
+  timeout: 2m0s
+  wait: true

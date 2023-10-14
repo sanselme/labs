@@ -16,22 +16,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 set -e
 
-: "${CLUSTER_NAME:="sandbox"}"
-: "${CONFIG_FILE:="hack/kind.yaml"}"
-
 source scripts/load-env.sh
-
-cp -f config/kind.yaml "${CONFIG_FILE}"
-yq -i '.networking.disableDefaultCNI = true' "${CONFIG_FILE}"
-
-# create kind cluster
-create_kind_cluster "${CLUSTER_NAME}" "${CONFIG_FILE}"
-
-# install cilium
-install_cilium
-
-# install flux
-install_flux
 
 # deploy workload
 kustomize build deployment/site/sandbox/secrets >"hack/${CLUSTER_NAME}-secrets.yaml"

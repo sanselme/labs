@@ -30,9 +30,9 @@ for i in {1..3}; do
   fi
 
   # create loop devices if they don't exist
-  if [[ -b "/dev/loop10${i}" ]]; then
+  if [[ -b "/dev/loop${i}" ]]; then
     echo "loop device already exists"
   else
-    losetup "/dev/loop10${i}" "/srv/rook-ceph-${i}.img"
+    losetup -f "/srv/rook-ceph-${i}.img"
   fi
 done

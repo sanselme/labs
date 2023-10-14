@@ -15,12 +15,14 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: rook-ceph
+components:
+  - ../../../global/csi/ceph/rook/cluster
 resources:
-  - ../../profile/common
-  - ../../profile/carrier/ceph
+  - ../../../global/csi/addons
+  - ../../../global/csi/ceph/rook
+  - ../../../global/csi/snapshotter
+  - namespace.yaml
 patches:
-  - path: patch/cilium.yaml
-  - path: patch/docker.yaml
-  - path: patch/flux.yaml
-  - path: patch/rook-ceph-cluster.yaml
-  - path: patch/rook-ceph-operator.yaml
+  - path: patch/cluster.yaml
+  - path: patch/operator.yaml

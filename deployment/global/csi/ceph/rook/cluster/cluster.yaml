@@ -1,0 +1,87 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: rook-ceph-cluster
+spec:
+  chart:
+    spec:
+      chart: rook-ceph-cluster
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: rook
+      version: v1.12.0
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  upgrade:
+    crds: CreateReplace
+  dependsOn:
+    - name: rook-ceph-operator
+  postRenderers:
+    - kustomize:
+        images:
+          - name: quay.io/ceph/ceph
+            newTag: v18.1.3
+            # newName: ghcr.io/gpu-ninja/ceph-images/ceph
+            # newTag: latest
+  values:
+    operatorNamespace: rook-ceph
+    toolbox:
+      enabled: false
+    monitoring:
+      createPrometheusRules: true
+      enabled: true
+    cephClusterSpec:
+      mgr:
+        count: 1
+        modules:
+          - name: k8sevents
+            enabled: true
+          - name: mirroring
+            enabled: true
+          - name: nfs
+            enabled: true
+          - name: osd_perf_query
+            enabled: true
+          - name: osd_support
+            enabled: true
+          - name: pg_autoscaler
+            enabled: true
+          - name: rgw
+            enabled: true
+          - name: rook
+            enabled: true
+      dashboard:
+        enabled: true
+        ssl: true
+      network:
+        connections:
+          encryption:
+            enabled: false
+        # provider: multus
+        # selectors:
+        #   public: public-conf
+        #   cluster: cluster-conf
+      crashCollector:
+        disable: false
+      storage:
+        useAllNodes: true
+        useAllDevices: true

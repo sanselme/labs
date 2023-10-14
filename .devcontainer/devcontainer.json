@@ -1,0 +1,22 @@
+{
+  "name": "labs",
+  "dockerComposeFile": ["${localWorkspaceFolder}/.docker/docker-compose.yaml"],
+  "service": "labs",
+  "workspaceFolder": "/workspace",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "nonFreePackages": true
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true,
+      "azureDnsAutoDetection": true,
+      "installDockerBuildx": true
+    }
+  },
+  "forwardPorts": [6443, 8080, 8443],
+  "postCreateCommand": "${containerWorkspaceFolder}/tools/setup-vscode.sh"
+}

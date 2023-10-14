@@ -1,0 +1,15 @@
+version: "3"
+services:
+  devcontainer:
+    image: mcr.microsoft.com/devcontainers/base:dev-ubuntu
+    init: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    entrypoint:
+      - sleep
+      - infinity
+    volumes:
+      - type: bind
+        source: ..
+        target: /workspace

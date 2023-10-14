@@ -18,25 +18,15 @@ kind: HelmRelease
 metadata:
   name: rook-ceph-cluster
 spec:
-  dependsOn:
-    - name: rook-ceph-operator
   values:
-    monitoring:
-      enabled: false
-      createPrometheusRules: false
-    configOverride: |
-      [global]
-      mon_allow_pool_delete = true
-      mon_allow_pool_size_one = true
-      osd_crush_chooseleaf_type = 0
-      osd_memory_target_autotune = true
-      osd_pool_default_min_size = 1
-      osd_pool_default_size = 1
     toolbox:
-      enabled: true
       resources:
-        limits: {}
-        requests: {}
+        limits:
+          cpu: null
+          memory: null
+        requests:
+          cpu: null
+          memory: null
     cephBlockPools:
       - name: ceph-blockpool
         spec:
@@ -90,14 +80,6 @@ spec:
             csi.storage.k8s.io/node-stage-secret-name: rook-csi-cephfs-node
             csi.storage.k8s.io/node-stage-secret-namespace: "{{ .Release.Namespace }}"
             csi.storage.k8s.io/fstype: ext4
-    cephFileSystemVolumeSnapshotClass:
-      enabled: true
-      annotations:
-        k10.kasten.io/is-snapshot-class: "true"
-    cephBlockPoolsVolumeSnapshotClass:
-      enabled: true
-      annotations:
-        k10.kasten.io/is-snapshot-class: "true"
     cephClusterSpec:
       mon:
         count: 1
@@ -114,31 +96,65 @@ spec:
           - name: /dev/loop3
       resources:
         cleanup:
-          limits: {}
-          requests: {}
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
         crashcollector:
-          limits: {}
-          requests: {}
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
         exporter:
-          limits: {}
-          requests: {}
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
         logcollector:
-          limits: {}
-          requests: {}
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
         mgr:
-          limits: {}
-          requests: {}
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
         mgr-sidecar:
-          limits: {}
-          requests: {}
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
         mon:
-          limits: {}
-          requests: {}
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
         osd:
-          limits: {}
-          requests: {}
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
         prepareosd:
-          requests: {}
+          requests:
+            cpu: null
+            memory: null
     cephObjectStores:
       - name: ceph-objectstore
         spec:
@@ -155,7 +171,6 @@ spec:
               size: 1
           gateway:
             instances: 1
-            port: 80
             securePort: 443
         storageClass:
           enabled: true

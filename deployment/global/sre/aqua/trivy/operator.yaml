@@ -16,20 +16,25 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: cert-manager
+  name: trivy-operator
 spec:
-  values:
-    installCRDs: true
-    # featureGates: ExperimentalGatewayAPISupport=true
-    podDnsPolicy: None
-    podDnsConfig:
-      nameservers:
-        - 1.1.1.1
-        - 9.9.9.9
-    ingressShim:
-      defaultIssuerName: default-ca-issuer
-      defaultIssuerKind: ClusterIssuer
-    prometheus:
-      enabled: true
-      servicemonitor:
-        enabled: true
+  chart:
+    spec:
+      chart: trivy-operator
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: aqua
+      version: 0.14.1
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  upgrade:
+    crds: CreateReplace
+  postRenderers:
+    - kustomize:
+        images:
+          - name: ghcr.io/aquasecurity/node-collector
+          - name: ghcr.io/aquasecurity/trivy-operator

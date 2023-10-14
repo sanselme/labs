@@ -19,11 +19,21 @@ metadata:
   name: rook-ceph-cluster
 spec:
   dependsOn:
+    - name: ceph-ca-issuer
+    - name: prometheus
+      namespace: observability
     - name: rook-ceph-operator
+  # postRenderers:
+  #   - kustomize:
+  #       images:
+  #         - name: quay.io/ceph/ceph
+  #           newName: ghcr.io/gpu-ninja/ceph-images/ceph
+  #           newTag: latest
   values:
+    operatorNamespace: rook-ceph
     monitoring:
-      enabled: false
-      createPrometheusRules: false
+      enabled: true
+      createPrometheusRules: true
     configOverride: |
       [global]
       mon_allow_pool_delete = true
@@ -34,9 +44,6 @@ spec:
       osd_pool_default_size = 1
     toolbox:
       enabled: true
-      resources:
-        limits: {}
-        requests: {}
     cephBlockPools:
       - name: ceph-blockpool
         spec:
@@ -99,15 +106,43 @@ spec:
       annotations:
         k10.kasten.io/is-snapshot-class: "true"
     cephClusterSpec:
+      dashboard:
+        enabled: true
+        ssl: true
+      network:
+        connections:
+          encryption:
+            enabled: false
+        # provider: multus
+        # selectors:
+        #   public: public-conf
+        #   cluster: cluster-conf
+      crashCollector:
+        disable: false
+      storage:
+        useAllNodes: true
+        useAllDevices: true
       mon:
         count: 3
       mgr:
         count: 2
-      crashCollector:
-        disable: true
-      storage:
-        useAllDevices: true
-        useAllNodes: true
+        modules:
+          - name: rook
+            enabled: true
+          - name: k8sevents
+            enabled: true
+          - name: mirroring
+            enabled: true
+          - name: nfs
+            enabled: true
+          - name: osd_perf_query
+            enabled: true
+          - name: osd_support
+            enabled: true
+          - name: pg_autoscaler
+            enabled: true
+          - name: rgw
+            enabled: true
     cephObjectStores:
       - name: ceph-objectstore
         spec:

@@ -20,7 +20,11 @@ metadata:
 spec:
   dependsOn:
     - name: cilium-ca-issuer
+    - name: prometheus
+      namespace: observability
   values:
+    # routingMode: native
+    tunnel: disabled
     bandwidthManager:
       bbr: false
     l2announcements:
@@ -28,8 +32,8 @@ spec:
       leaseDuration: 3s
       leaseRenewDeadline: 1s
       leaseRetryPeriod: 500ms
-    securityContext:
-      privileged: true
+    # securityContext:
+    #   privileged: true
     bgpControlPlane:
       enabled: true
     pmtuDiscovery:
@@ -50,8 +54,35 @@ spec:
     hostFirewall:
       enabled: true
     hubble:
+      metrics:
+        dashboards:
+          enabled: true
+          namespace: observability
+        enableOpenMetrics: true
+        enabled:
+          - dns:query;ignoreAAAA
+          - drop
+          - tcp
+          - flow
+          - icmp
+          - http
+        serviceMonitor:
+          enabled: true
+      tls:
+        auto:
+          certManagerIssuerRef:
+            group: cert-manager.io
+            kind: Issuer
+            name: cilium-ca-issuer
+          method: certmanager
+      ui:
+        enabled: false
       relay:
-        enabled: true
+        enabled: false
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: true
     ipam:
       mode: kubernetes
     monitor:
@@ -62,8 +93,27 @@ spec:
       algorithm: maglev
       l7:
         backend: envoy
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        trustCRDsExist: true
+    dashboards:
+      enabled: true
+      namespace: observability
     proxy:
       prometheus:
         enabled: true
-    tunnel: disabled
-    # routingMode: native
+    # gatewayAPI:
+    #   enabled: true
+    #   secretsNamespace:
+    #     create: false
+    #     name: kube-system
+    operator:
+      dashboards:
+        enabled: true
+        namespace: observability
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true

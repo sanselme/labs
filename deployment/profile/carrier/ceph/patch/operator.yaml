@@ -20,3 +20,19 @@ metadata:
 spec:
   values:
     allowLoopDevices: false
+    csi:
+      enableMetadata: true
+      serviceMonitor:
+        enabled: true
+      csiAddons:
+        enabled: true
+      nfs:
+        enabled: true
+      topology:
+        enabled: true
+        domainLabels:
+          - kubernetes.io/hostname
+      readAffinity:
+        enabled: true
+    monitoring:
+      enabled: true

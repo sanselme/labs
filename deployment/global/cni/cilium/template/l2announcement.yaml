@@ -13,11 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
-kind: HelmRepository
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
 metadata:
-  name: docker
+  name: default-l2-policy
 spec:
-  type: oci
-  interval: 1m0s
-  url: oci://registry-1.docker.io/
+  externalIPs: true
+  loadBalancerIPs: true
+  interfaces:
+    - eth0

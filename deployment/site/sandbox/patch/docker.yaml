@@ -18,6 +18,5 @@ kind: HelmRepository
 metadata:
   name: docker
 spec:
-  type: oci
-  interval: 1m0s
-  url: oci://registry-1.docker.io/
+  secretRef:
+    name: docker-registry

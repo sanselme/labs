@@ -13,11 +13,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
-kind: HelmRepository
+apiVersion: cilium.io/v2alpha1
+kind: CiliumBGPPeeringPolicy
 metadata:
-  name: docker
+  name: default-bgp-peer
 spec:
-  type: oci
-  interval: 1m0s
-  url: oci://registry-1.docker.io/
+  virtualRouters:
+    - localASN: 64512
+      exportPodCIDR: false
+      neighbors:
+        - peerAddress: "fc00:f853:ccd:e793::50/128"
+          peerASN: 64512
+          eBGPMultihopTTL: 10
+          connectRetryTimeSeconds: 120
+          holdTimeSeconds: 90
+          keepAliveTimeSeconds: 30
+          gracefulRestart:
+            enabled: true
+            restartTimeSeconds: 120

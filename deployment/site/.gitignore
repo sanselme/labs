@@ -1,0 +1,7 @@
+*.*
+*/**
+!.gitignore
+!codecloud
+!sandbox
+!skiff
+!wordpress

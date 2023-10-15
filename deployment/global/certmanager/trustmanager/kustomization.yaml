@@ -13,12 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: sre
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: cert-manager
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - trustmanager.yaml

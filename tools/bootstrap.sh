@@ -62,6 +62,12 @@ clusterctl init \
 # install k0smotron
 kubectl apply -f "https://docs.k0smotron.io/${K0SMOTRON_VERSION}/install.yaml"
 
+# generate workload config
+kustomize build deployment/site/bootstrap >"hack/bootstrap.yaml"
+kustomize build deployment/site/bootstrap/network >"hack/bootstrap-network.yaml"
+kustomize build deployment/site/bootstrap/secrets >"hack/bootstrap-secret.yaml"
+
 # deploy workload
-kustomize build deployment/site/bootstrap >hack/bootstrap.yaml
-kubectl apply -f hack/bootstrap.yaml
+kubectl apply -f "hack/bootstrap.yaml"
+kubectl apply -f "hack/bootstrap-network.yaml"
+kubectl apply -f "hack/bootstrap-secret.yaml"

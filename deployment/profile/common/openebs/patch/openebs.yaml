@@ -24,3 +24,5 @@ spec:
     localprovisioner:
       hostpathClass:
         isDefaultClass: true
+    ndm:
+      enabled: false

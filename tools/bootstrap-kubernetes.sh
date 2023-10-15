@@ -53,6 +53,12 @@ gen_config_k0sctl "${K0SCTL_CONFIG_FILE}"
 # create cluster with k0sctl
 k0sctl apply --config "${K0SCTL_CONFIG_FILE}"
 
+# generate workload config
+kustomize build deployment/site/codecloud >"hack/codecloud.yaml"
+kustomize build deployment/site/codecloud/network >"hack/codecloud-network.yaml"
+kustomize build deployment/site/codecloud/secrets >"hack/codecloud-secret.yaml"
+
 # deploy workload
-kustomize build deployment/site/codecloud >/tmp/codecloud.yaml
-kubectl apply -f /tmp/codecloud.yaml
+kubectl apply -f "hack/codecloud.yaml"
+kubectl apply -f "hack/codecloud-network.yaml"
+kubectl apply -f "hack/codecloud-secret.yaml"

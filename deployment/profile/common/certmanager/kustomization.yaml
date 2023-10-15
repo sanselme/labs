@@ -20,6 +20,7 @@ components:
   - ../../../global/certmanager/clusterissuer
 resources:
   - ../../../global/certmanager
+  - ../../../global/certmanager/trustmanager
   - namespace.yaml
 patches:
   - path: patch/certmanager.yaml

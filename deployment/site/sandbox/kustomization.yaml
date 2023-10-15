@@ -24,7 +24,7 @@ patches:
   - path: patch/default-clusterissuer.yaml
   - path: patch/docker.yaml
   - path: patch/flux.yaml
+  - path: patch/gatekeeper.yaml
   - path: patch/trivy.yaml
-  # - path: patch/gatekeeper.yaml
   # - path: patch/rook-ceph-cluster.yaml
   # - path: patch/rook-ceph-operator.yaml

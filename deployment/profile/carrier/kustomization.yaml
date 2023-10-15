@@ -18,3 +18,5 @@ kind: Kustomization
 resources:
   - ceph
   - observability
+  - openstack
+  - ucp

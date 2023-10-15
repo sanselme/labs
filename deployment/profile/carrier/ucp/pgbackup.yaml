@@ -13,18 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ../../profile/carrier
-  - ../../profile/common
-  - ../../profile/harbor
-patches:
-  - path: patch/default-clusterissuer.yaml
-  - path: patch/docker.yaml
-  - path: patch/gatekeeper.yaml
-  - path: patch/loki.yaml
-  - path: patch/pgcluster.yaml
-  - path: patch/tempo.yaml
-  - path: patch/trivy.yaml
-  - path: patch/vault.yaml
+apiVersion: postgresql.k8s.enterprisedb.io/v1
+kind: ScheduledBackup
+metadata:
+  name: scheduledbackup
+spec:
+  schedule: 0 0 0 * * *
+  cluster:
+    name: postgresql

@@ -69,7 +69,11 @@ create_kind_cluster() {
   kubectl get pod -o wide -A
 
   # FIXME: remove sandard storageclass if requested
-  [[ -n ${NO_STANDARD_SC} ]] && kubectl delete storageclass standard
+  if [[ -n ${NO_STANDARD_SC} ]]; then
+    kubectl delete storageclass standard
+    kubectl delete deployment -n local-path-storage local-path-provisioner
+    kubectl delete namespaces local-path-storage
+  fi
 }
 
 # install cilium

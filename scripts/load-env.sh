@@ -21,6 +21,9 @@ export CILIUM_VERSION FLUX_VERSION
 
 export CLUSTER_NAME="sandbox"
 export CONFIG_FILE="hack/kind.yaml"
+export K0S_CONFIG_FILE="hack/kubernetes/k0s.yaml"
+export K0SCTL_CONFIG_FILE="hack/kubernetes/cluster.yaml"
+export SSH_PUB_KEY_FILE="${HOME}/.ssh/id_ed25519.pub"
 
 export BITNAMI="oci://registry-1.docker.io/bitnamicharts"
 
@@ -48,6 +51,18 @@ gen_config_k0s() {
   yq -i 'del(.spec.api.externalAddress)' "${K0S_CONFIG_FILE}"
   yq -i 'del(.spec.api.extraArgs)' "${K0S_CONFIG_FILE}"
   yq -i '.metadata.name = "docker"' "${K0S_CONFIG_FILE}"
+}
+
+# FIXME: generate k0sctl config
+gen_config_k0sctl() {
+  K0SCTL_CONFIG_FILE="${1}"
+  [[ -z ${K0SCTL_CONFIG_FILE} ]] && echo "Usage: $0 <k0sctl-config-file>" && exit 1
+
+  cp -f config/k0s/k0sctl.tpl "${K0SCTL_CONFIG_FILE}"
+  yq -i '(.. | select(tag == "!!str")) |= envsubst(nu)' "${K0SCTL_CONFIG_FILE}"
+
+  yq -i '(.spec.k0s.config = load("hack/kubernetes/k0s.yaml"))' hack/kubernetes/cluster.yaml
+  yq -i 'del(.spec.api.externalAddress)' "${K0SCTL_CONFIG_FILE}"
 }
 
 # create kind config if not present

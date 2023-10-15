@@ -15,10 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 set -e
+source scripts/load-env.sh
 
 : "${DOCKER_COMPOSE_FILE:="hack/docker/docker-compose.yaml"}"
-
-source scripts/load-env.sh
 
 # generate cluster config
 gen_config_k0s hack/docker/cluster.yaml

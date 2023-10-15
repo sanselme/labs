@@ -19,11 +19,11 @@ set -e
 source scripts/load-env.sh
 
 # generate workload config
-kustomize build deployment/site/skiff >"hack/${CLUSTER_NAME}.yaml"
-kustomize build deployment/site/skiff/network >"hack/${CLUSTER_NAME}-network.yaml"
-kustomize build deployment/site/skiff/secrets >"hack/${CLUSTER_NAME}-secrets.yaml"
+kustomize build deployment/site/skiff >"hack/skiff.yaml"
+kustomize build deployment/site/skiff/network >"hack/skiff-network.yaml"
+kustomize build deployment/site/skiff/secrets >"hack/skiff-secrets.yaml"
 
 # deploy workload
-kubectl apply -f "hack/${CLUSTER_NAME}.yaml"
-kubectl apply -f "hack/${CLUSTER_NAME}-network.yaml"
-kubectl apply -f "hack/${CLUSTER_NAME}-secrets.yaml"
+kubectl apply -f "hack/skiff.yaml"
+kubectl apply -f "hack/skiff-network.yaml"
+kubectl apply -f "hack/skiff-secrets.yaml"

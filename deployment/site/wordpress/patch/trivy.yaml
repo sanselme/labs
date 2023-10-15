@@ -16,27 +16,17 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: sonarqube
+  name: trivy-operator
 spec:
-  chart:
-    spec:
-      chart: bitnamicharts/sonarqube
-      reconcileStrategy: ChartVersion
-      sourceRef:
-        kind: HelmRepository
-        name: docker
-        namespace: sre
-      version: 3.2.8
-  install:
-    crds: Create
-    createNamespace: true
-    replace: true
-  interval: 1m0s
-  upgrade:
-    crds: CreateReplace
-  postRenderers:
-    - kustomize:
-        images:
-          - name: docker.io/bitnami/jmx-exporter
-          - name: docker.io/bitnami/os-shell
-          - name: docker.io/bitnami/sonarqube
+  values:
+    operator:
+      replicas: 1
+    resources: {}
+    trivy:
+      resources:
+        limits: {}
+        requests: {}
+      server:
+        resources:
+          limits: {}
+          requests: {}

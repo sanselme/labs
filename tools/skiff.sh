@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,8 +14,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
----
-apiVersion: kustomize.config.k8s.io/v1alpha1
-kind: Component
-resources:
-  - oidc.yaml
+set -e
+
+source scripts/load-env.sh
+
+# generate workload config
+kustomize build deployment/site/skiff >"hack/${CLUSTER_NAME}.yaml"
+kustomize build deployment/site/skiff/network >"hack/${CLUSTER_NAME}-network.yaml"
+kustomize build deployment/site/skiff/secrets >"hack/${CLUSTER_NAME}-secrets.yaml"
+
+# deploy workload
+kubectl apply -f "hack/${CLUSTER_NAME}.yaml"
+kubectl apply -f "hack/${CLUSTER_NAME}-network.yaml"
+kubectl apply -f "hack/${CLUSTER_NAME}-secrets.yaml"

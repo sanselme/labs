@@ -19,9 +19,9 @@ kind: Kustomization
 resources:
   - certmanager
   - cilium
+  - externaldns
+  - gatekeeper
   - observability
   - openebs
+  - pinniped
   - sre
-  # - externaldns
-  # - gatekeeper
-  # - pinniped

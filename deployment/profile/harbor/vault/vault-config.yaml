@@ -13,28 +13,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: pinniped
-spec:
-  chart:
-    spec:
-      chart: bitnamicharts/pinniped
-      reconcileStrategy: ChartVersion
-      sourceRef:
-        kind: HelmRepository
-        name: docker
-        namespace: flux-system
-      version: 1.2.5
-  install:
-    crds: Create
-    createNamespace: true
-    replace: true
-  interval: 1m0s
-  upgrade:
-    crds: CreateReplace
-  postRenderers:
-    - kustomize:
-        images:
-          - name: bitnami/pinniped
+  name: vault-conf
+  namespace: iam
+data:
+  oidc-admin.hcl: |
+    # To create an entity and entity alias. Enable and configure Vault as an OIDC provider
+    path "identity/*" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+    }
+
+    # To enable userpass auth method
+    path "sys/auth/userpass" {
+      capabilities = [ "create", "read", "update", "delete" ]
+    }
+
+    # To create a new user, "end-user" for userpass
+    path "auth/userpass/users/*" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+    }
+  oidc-auth.hcl: |
+    path "identity/oidc/provider/vault/authorize" {
+      capabilities = [ "read" ]
+    }

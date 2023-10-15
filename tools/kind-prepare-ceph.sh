@@ -20,20 +20,15 @@ set -e
 : "${CEPH_VERSION:="$(yq '.spec.chart.spec.version' deployment/global/csi/ceph/rook/operator.yaml)"}"
 : "${CONTAINER_NAME:="${CLUSTER_NAME}-control-plane"}"
 
-# create kind cluster
-create_kind_config false
-create_kind_cluster "${CLUSTER_NAME}" "${CONFIG_FILE}"
-
 # create loopback device
 docker container cp scripts/setup-ceph-loopdev.sh "${CONTAINER_NAME}:setup-ceph-loopdev.sh"
 docker container exec -it "${CONTAINER_NAME}" chmod +x /setup-ceph-loopdev.sh
 docker container exec -it "${CONTAINER_NAME}" /setup-ceph-loopdev.sh
 
-# configure rook-ceph
+# FIXME: configure rook-ceph
 # NS="rook-ceph"
 # POD="$(kubectl get pod -n "${NS}" | awk '/rook-ceph-tools/ { print $1 }')"
 
-# FIXME: rook module not being enabled (bug?)
 # sleep 15
 # kubectl exec -n "${NS}" "${POD}" -- ceph mgr module enable rook
 # kubectl exec -n "${NS}" "${POD}" -- ceph orch set backend rook

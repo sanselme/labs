@@ -18,11 +18,12 @@ set -e
 
 source scripts/load-env.sh
 
-# deploy workload
+# generate workload config
 kustomize build deployment/site/sandbox >"hack/${CLUSTER_NAME}.yaml"
 kustomize build deployment/site/sandbox/network >"hack/${CLUSTER_NAME}-network.yaml"
 kustomize build deployment/site/sandbox/secrets >"hack/${CLUSTER_NAME}-secrets.yaml"
 
+# deploy workload
 kubectl apply -f "hack/${CLUSTER_NAME}.yaml"
 kubectl apply -f "hack/${CLUSTER_NAME}-network.yaml"
 kubectl apply -f "hack/${CLUSTER_NAME}-secrets.yaml"

@@ -13,31 +13,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
 metadata:
-  name: redis
+  name: topic
+  labels:
+    strimzi.io/cluster: kafka
 spec:
-  chart:
-    spec:
-      chart: sanselme/redis
-      reconcileStrategy: ChartVersion
-      sourceRef:
-        kind: HelmRepository
-        name: docker
-        namespace: sre
-      version: 0.1.4
-  install:
-    crds: Create
-    createNamespace: true
-    replace: true
-  interval: 1m0s
-  upgrade:
-    crds: CreateReplace
-  postRenderers:
-    - kustomize:
-        images:
-          - name: docker.io/library/docker
-          - name: docker.io/library/redis
-          - name: docker.io/redislabs/redis-py
-          - name: quay.io/airshipit/kubernetes-entrypoint
+  partitions: 10
+  replicas: 3
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824

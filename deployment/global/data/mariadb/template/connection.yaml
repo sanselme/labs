@@ -13,31 +13,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
+apiVersion: mariadb.mmontes.io/v1alpha1
+kind: Connection
 metadata:
-  name: redis
+  name: connection
 spec:
-  chart:
-    spec:
-      chart: sanselme/redis
-      reconcileStrategy: ChartVersion
-      sourceRef:
-        kind: HelmRepository
-        name: docker
-        namespace: sre
-      version: 0.1.4
-  install:
-    crds: Create
-    createNamespace: true
-    replace: true
-  interval: 1m0s
-  upgrade:
-    crds: CreateReplace
-  postRenderers:
-    - kustomize:
-        images:
-          - name: docker.io/library/docker
-          - name: docker.io/library/redis
-          - name: docker.io/redislabs/redis-py
-          - name: quay.io/airshipit/kubernetes-entrypoint
+  database: mariadb
+  healthCheck:
+    interval: 10s
+    retryInterval: 3s
+  mariaDbRef:
+    name: mariadb
+  params:
+    parseTime: "true"
+  passwordSecretKeyRef:
+    key: password
+    name: mariadb
+  secretName: connection
+  secretTemplate:
+    annotations:
+      mariadb.mmontes.io/connection: sample
+    databaseKey: database
+    hostKey: host
+    key: dsn
+    labels:
+      mariadb.mmontes.io/connection: sample
+    passwordKey: password
+    portKey: port
+    usernameKey: username
+  serviceName: mariadb
+  username: mariadb

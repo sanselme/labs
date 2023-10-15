@@ -13,20 +13,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ../../profile/carrier
-  - ../../profile/common
-  - ../../profile/depot
-  - ../../profile/harbor
-patches:
-  - path: patch/default-clusterissuer.yaml
-  - path: patch/docker.yaml
-  - path: patch/gatekeeper.yaml
-  - path: patch/kasten.yaml
-  - path: patch/loki.yaml
-  - path: patch/pgcluster.yaml
-  - path: patch/tempo.yaml
-  - path: patch/trivy.yaml
-  - path: patch/vault.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: k10-ceph-location-secret
+data:
+  aws_access_key_id: ""
+  aws_secret_access_key: ""
+---
+kind: Profile
+apiVersion: config.kio.kasten.io/v1alpha1
+metadata:
+  name: k10-ceph-location-profile
+spec:
+  type: Location
+  locationSpec:
+    type: ObjectStore
+    objectStore:
+      endpoint: https://ceph-objectstore.ceph.svc.cluster.local
+      name: k10-ceph-bkt
+      objectStoreType: S3
+    credential:
+      secretType: AwsAccessKey
+      secret:
+        name: k10-ceph-location-secret

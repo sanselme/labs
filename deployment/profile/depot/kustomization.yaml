@@ -16,17 +16,5 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ../../profile/carrier
-  - ../../profile/common
-  - ../../profile/depot
-  - ../../profile/harbor
-patches:
-  - path: patch/default-clusterissuer.yaml
-  - path: patch/docker.yaml
-  - path: patch/gatekeeper.yaml
-  - path: patch/kasten.yaml
-  - path: patch/loki.yaml
-  - path: patch/pgcluster.yaml
-  - path: patch/tempo.yaml
-  - path: patch/trivy.yaml
-  - path: patch/vault.yaml
+  - artifactory
+  - kasten

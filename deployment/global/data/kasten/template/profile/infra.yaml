@@ -13,20 +13,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ../../profile/carrier
-  - ../../profile/common
-  - ../../profile/depot
-  - ../../profile/harbor
-patches:
-  - path: patch/default-clusterissuer.yaml
-  - path: patch/docker.yaml
-  - path: patch/gatekeeper.yaml
-  - path: patch/kasten.yaml
-  - path: patch/loki.yaml
-  - path: patch/pgcluster.yaml
-  - path: patch/tempo.yaml
-  - path: patch/trivy.yaml
-  - path: patch/vault.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: k10-ceph-infra-secret
+data:
+  ceph_keyring: ""
+  ceph_user: ""
+---
+kind: Profile
+apiVersion: config.kio.kasten.io/v1alpha1
+metadata:
+  name: k10-ceph-infra-profile
+spec:
+  type: Infra
+  infra:
+    type: Ceph
+    ceph:
+      monitor: 127.0.0.1:6789
+      pool: pool0
+    credential:
+      secretType: CephKeyring
+      secret:
+        name: k10-ceph-infra-secret

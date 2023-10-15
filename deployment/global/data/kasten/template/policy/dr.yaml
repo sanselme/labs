@@ -13,20 +13,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ../../profile/carrier
-  - ../../profile/common
-  - ../../profile/depot
-  - ../../profile/harbor
-patches:
-  - path: patch/default-clusterissuer.yaml
-  - path: patch/docker.yaml
-  - path: patch/gatekeeper.yaml
-  - path: patch/kasten.yaml
-  - path: patch/loki.yaml
-  - path: patch/pgcluster.yaml
-  - path: patch/tempo.yaml
-  - path: patch/trivy.yaml
-  - path: patch/vault.yaml
+kind: Policy
+apiVersion: config.kio.kasten.io/v1alpha1
+metadata:
+  name: k10-disaster-recovery-policy
+spec:
+  frequency: "@hourly"
+  retention:
+    hourly: 4
+    daily: 1
+    weekly: 1
+    monthly: 1
+    yearly: 1
+  selector:
+    matchExpressions:
+      - key: k10.kasten.io/appNamespace
+        operator: In
+        values:
+          - kasten
+  actions:
+    - action: backup
+      backupParameters:
+        filters: {}
+        profile:
+          name: ceph-location

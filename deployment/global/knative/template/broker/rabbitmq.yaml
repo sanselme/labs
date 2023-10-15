@@ -13,10 +13,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - cilium-ca-key-pair.yaml
-  - default-ca-key-pair.yaml
-  - docker-registry.yaml
-  - knative-ca-key-pair.yaml
+apiVersion: eventing.knative.dev/v1alpha1
+kind: RabbitmqBrokerConfig
+metadata:
+  name: rabbitmqbrokerconfig
+spec:
+  queueType: quorum
+  rabbitmqClusterReference:
+    name: rabbitmq
+    connectionSecret:
+      name: rabbitmq-secret-credentials
+---
+apiVersion: eventing.knative.dev/v1
+kind: Broker
+metadata:
+  name: default
+  annotations:
+    eventing.knative.dev/broker.class: RabbitMQBroker
+spec:
+  config:
+    apiVersion: rabbitmq.com/v1alpha1
+    kind: RabbitmqBrokerConfig
+    name: rabbitmqbrokerconfig

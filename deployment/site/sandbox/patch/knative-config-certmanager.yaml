@@ -13,10 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - cilium-ca-key-pair.yaml
-  - default-ca-key-pair.yaml
-  - docker-registry.yaml
-  - knative-ca-key-pair.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-certmanager
+  namespace: knative-serving
+data:
+  ksvc.sandbox.dev.local: |-
+    issuerRef:
+      kind: ClusterIssuer
+      name: knative-ca-issuer

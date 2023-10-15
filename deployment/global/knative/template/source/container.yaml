@@ -13,10 +13,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - cilium-ca-key-pair.yaml
-  - default-ca-key-pair.yaml
-  - docker-registry.yaml
-  - knative-ca-key-pair.yaml
+apiVersion: sources.knative.dev/v1
+kind: ContainerSource
+metadata:
+  name: containersource
+spec:
+  template:
+    spec:
+      containers:
+        - name: heartbeats
+          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/heartbeats:latest
+  sink:
+    ref:
+      apiVersion: eventing.knative.dev/v1
+      kind: Broker
+      name: default

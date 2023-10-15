@@ -20,11 +20,14 @@ resources:
   - ../../profile/common
   - ../../profile/depot
   - ../../profile/harbor
+  - ../../profile/operators
+  # - ../../profile/cruiser
 patches:
   - path: patch/default-clusterissuer.yaml
   - path: patch/docker.yaml
   - path: patch/gatekeeper.yaml
   - path: patch/kasten.yaml
+  # - path: patch/knative-config-certmanager.yaml
   - path: patch/loki.yaml
   - path: patch/pgcluster.yaml
   - path: patch/tempo.yaml

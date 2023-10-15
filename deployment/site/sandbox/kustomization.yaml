@@ -17,14 +17,15 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - ../../profile/common
+  - ../../profile/cruiser
   # - ../../profile/carrier/ceph
-  # - ../../profile/carrier/observability
 patches:
   - path: patch/cilium.yaml
   - path: patch/default-clusterissuer.yaml
   - path: patch/docker.yaml
   - path: patch/flux.yaml
   - path: patch/gatekeeper.yaml
+  - path: patch/knative-config-certmanager.yaml
   - path: patch/trivy.yaml
   # - path: patch/rook-ceph-cluster.yaml
   # - path: patch/rook-ceph-operator.yaml

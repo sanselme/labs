@@ -13,10 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - cilium-ca-key-pair.yaml
-  - default-ca-key-pair.yaml
-  - docker-registry.yaml
-  - knative-ca-key-pair.yaml
+apiVersion: sources.knative.dev/v1alpha1
+kind: RedisStreamSource
+metadata:
+  name: redisstreamsource
+spec:
+  address: <redis-uri>
+  stream: <redis-stream-name>
+  group: <consumer-group-name>
+  sink: <sink>

@@ -13,11 +13,32 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+components:
+  - ../../common/kubeadm
+  - ../common
 resources:
-  - capi
-  - ceph
-  - observability
-  - openstack
-  - ucp
+  - clusterclass.yaml
+patches:
+  - patch: |-
+      - op: replace
+        path: /metadata/name
+        value: capi-byoh
+    target:
+      kind: ClusterClass
+      name: capi
+  - patch: |-
+      - op: replace
+        path: /metadata/name
+        value: byoh-worker-bootstraptemplate
+    target:
+      kind: KubeadmConfigTemplate
+      name: default-worker-bootstraptemplate
+  - patch: |-
+      - op: replace
+        path: /metadata/name
+        value: byoh-control-plane
+    target:
+      kind: KubeadmControlPlaneTemplate
+      name: capi-control-plane

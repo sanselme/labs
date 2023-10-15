@@ -1,0 +1,344 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: ClusterClass
+metadata:
+  name: capi-byoh
+spec:
+  controlPlane:
+    machineInfrastructure:
+      ref:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: ByoMachineTemplate
+        name: byoh-control-plane
+    ref:
+      apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+      kind: KubeadmControlPlaneTemplate
+      name: byoh-control-plane
+  infrastructure:
+    ref:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      kind: ByoClusterTemplate
+      name: byoh
+  patches:
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/controlPlaneEndpoint
+              valueFrom:
+                template: |
+                  host: {{ .controlPlaneEndpointAddr }}
+                  port: 6443
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+            kind: ByoClusterTemplate
+            matchResources:
+              infrastructureCluster: true
+      description: Sets the control plane endpoint.
+      name: controlPlaneEndpointAddr
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/clusterConfiguration/apiServer/certSANs
+              valueFrom:
+                variable: certSANs
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: KubeadmControlPlaneTemplate
+            matchResources:
+              controlPlane: true
+      description: Sets the certSANs used for the KubeadmControlPlane.
+      name: certSANs
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/clusterConfiguration/imageRepository
+              valueFrom:
+                variable: imageRepository
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: KubeadmControlPlaneTemplate
+            matchResources:
+              controlPlane: true
+      description: Sets the imageRepository used for the KubeadmControlPlane.
+      enabledIf: '{{ ne .imageRepository "" }}'
+      name: imageRepository
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/clusterConfiguration/etcd
+              valueFrom:
+                template: |
+                  local:
+                    imageTag: {{ .etcdImageTag }}
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: KubeadmControlPlaneTemplate
+            matchResources:
+              controlPlane: true
+      description: Sets tag to use for the etcd image in the KubeadmControlPlane.
+      name: etcdImageTag
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/clusterConfiguration/dns
+              valueFrom:
+                template: |
+                  imageTag: {{ .coreDNSImageTag }}
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: KubeadmControlPlaneTemplate
+            matchResources:
+              controlPlane: true
+      description: Sets tag to use for the etcd image in the KubeadmControlPlane.
+      name: coreDNSImageTag
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/bundleLookupBaseRegistry
+              valueFrom:
+                variable: bundleLookupBaseRegistry
+          selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+            kind: ByoClusterTemplate
+            matchResources:
+              infrastructureCluster: true
+      description: Sets the bundle lookup base registry.
+      name: bundleLookupBaseRegistry
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/clusterConfiguration/apiServer/extraArgs
+              value:
+                admission-control-config-file: /etc/kubernetes/kube-apiserver-admission-pss.yaml
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/clusterConfiguration/apiServer/extraVolumes
+              value:
+                - hostPath: /etc/kubernetes/kube-apiserver-admission-pss.yaml
+                  mountPath: /etc/kubernetes/kube-apiserver-admission-pss.yaml
+                  name: admission-pss
+                  pathType: File
+                  readOnly: true
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/files
+              valueFrom:
+                template: |
+                  - content: |
+                      apiVersion: apiserver.config.k8s.io/v1
+                      kind: AdmissionConfiguration
+                      plugins:
+                      - name: PodSecurity
+                        configuration:
+                          apiVersion: pod-security.admission.config.k8s.io/v1{{ if semverCompare "< v1.25" .builtin.controlPlane.version }}beta1{{ end }}
+                          kind: PodSecurityConfiguration
+                          defaults:
+                            enforce: "{{ .podSecurityStandard.enforce }}"
+                            enforce-version: "latest"
+                            audit: "{{ .podSecurityStandard.audit }}"
+                            audit-version: "latest"
+                            warn: "{{ .podSecurityStandard.warn }}"
+                            warn-version: "latest"
+                          exemptions:
+                            usernames: []
+                            runtimeClasses: []
+                            namespaces: [kube-system]
+                    path: /etc/kubernetes/kube-apiserver-admission-pss.yaml
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: KubeadmControlPlaneTemplate
+            matchResources:
+              controlPlane: true
+      description: Adds an admission configuration for PodSecurity to the kube-apiserver.
+      enabledIf: "{{ .podSecurityStandard.enabled }}"
+      name: podSecurityStandard
+    - definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/files
+              valueFrom:
+                template: |
+                  - content: |
+                      apiVersion: v1
+                      kind: Pod
+                      metadata:
+                        creationTimestamp: null
+                        name: kube-vip
+                        namespace: kube-system
+                      spec:
+                        containers:
+                        - args:
+                          - manager
+                          env:
+                          - name: cp_enable
+                            value: "true"
+                          - name: vip_arp
+                            value: "true"
+                          - name: vip_leaderelection
+                            value: "true"
+                          - name: vip_address
+                            value: {{ .controlPlaneEndpointAddr }}
+                          - name: vip_interface
+                            value: {{ .kubeVip.interface }}
+                          - name: vip_leaseduration
+                            value: "15"
+                          - name: vip_renewdeadline
+                            value: "10"
+                          - name: vip_retryperiod
+                            value: "2"
+                          image: ghcr.io/kube-vip/kube-vip:v0.5.0
+                          imagePullPolicy: IfNotPresent
+                          name: kube-vip
+                          resources: {}
+                          securityContext:
+                            capabilities:
+                              add:
+                              - NET_ADMIN
+                              - NET_RAW
+                          volumeMounts:
+                          - mountPath: /etc/kubernetes/admin.conf
+                            name: kubeconfig
+                        hostNetwork: true
+                        hostAliases:
+                          - hostnames:
+                              - kubernetes
+                            ip: 127.0.0.1
+                        volumes:
+                        - hostPath:
+                            path: /etc/kubernetes/admin.conf
+                            type: FileOrCreate
+                          name: kubeconfig
+                      status: {}
+                    path: /etc/kubernetes/manifests/kube-vip.yaml
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: KubeadmControlPlaneTemplate
+            matchResources:
+              controlPlane: true
+      description: Adds a kube-vip manifest to the control plane node.
+      enabledIf: "{{ .kubeVip.enabled }}"
+      name: kubeVipPodManifest
+  variables:
+    - name: controlPlaneEndpointAddr
+      required: true
+      schema:
+        openAPIV3Schema:
+          default: ""
+          description: The address of the control plane endpoint.
+          type: string
+    - name: certSANs
+      required: false
+      schema:
+        openAPIV3Schema:
+          default:
+            - localhost
+            - 127.0.0.1
+          description:
+            certSANs sets the certSANs used for the KubeadmControlPlane.
+            If empty, nothing will be set and the from of kubeadm will be used.
+          items:
+            type: string
+          type: array
+    - name: imageRepository
+      required: true
+      schema:
+        openAPIV3Schema:
+          default: ""
+          description:
+            imageRepository sets the container registry to pull images from.
+            If empty, nothing will be set and the from of kubeadm will be used.
+          example: registry.k8s.io
+          type: string
+    - name: etcdImageTag
+      required: true
+      schema:
+        openAPIV3Schema:
+          default: ""
+          description: etcdImageTag sets the tag for the etcd image.
+          example: 3.5.3-0
+          type: string
+    - name: coreDNSImageTag
+      required: true
+      schema:
+        openAPIV3Schema:
+          default: ""
+          description: coreDNSImageTag sets the tag for the coreDNS image.
+          example: v1.8.5
+          type: string
+    - name: bundleLookupBaseRegistry
+      required: false
+      schema:
+        openAPIV3Schema:
+          default: https://projects.registry.vmware.com/cluster_api_provider_bringyourownhost
+          description: The base registry to use for bundle lookup.
+          type: string
+    - name: podSecurityStandard
+      required: false
+      schema:
+        openAPIV3Schema:
+          properties:
+            audit:
+              default: restricted
+              description:
+                audit sets the level for the audit PodSecurityConfiguration
+                mode. One of privileged, baseline, restricted.
+              type: string
+            enabled:
+              default: true
+              description:
+                enabled enables the patches to enable Pod Security Standard
+                via AdmissionConfiguration.
+              type: boolean
+            enforce:
+              default: baseline
+              description:
+                enforce sets the level for the enforce PodSecurityConfiguration
+                mode. One of privileged, baseline, restricted.
+              type: string
+            warn:
+              default: restricted
+              description:
+                warn sets the level for the warn PodSecurityConfiguration
+                mode. One of privileged, baseline, restricted.
+              type: string
+          type: object
+    - name: kubeVip
+      required: false
+      schema:
+        openAPIV3Schema:
+          properties:
+            enabled:
+              default: false
+              description: enableKubeVip enables kube-vip on control plane nodes.
+              type: boolean
+            interface:
+              default: eth0
+              description: interface is the interface to bind kube-vip to.
+              type: string
+          type: object
+  workers:
+    machineDeployments:
+      - class: default-worker
+        template:
+          bootstrap:
+            ref:
+              apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+              kind: KubeadmConfigTemplate
+              name: byoh-worker-bootstraptemplate
+          infrastructure:
+            ref:
+              apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+              kind: ByoMachineTemplate
+              name: byoh-worker-machinetemplate

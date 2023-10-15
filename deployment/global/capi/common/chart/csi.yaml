@@ -13,11 +13,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - capi
-  - ceph
-  - observability
-  - openstack
-  - ucp
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: hostpath-provisioner
+spec:
+  chartName: sanselme/hostpath-provisioner
+  clusterSelector:
+    matchLabels:
+      hostpath-provisioner: enabled
+  namespace: kube-system
+  options:
+    waitForJobs: true
+    wait: true
+    timeout: 5m
+    install:
+      createNamespace: true
+      includeCRDs: true
+  releaseName: hostpath-provisioner
+  repoURL: oci://registry-1.docker.io/
+  version: 0.0.1

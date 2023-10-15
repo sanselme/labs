@@ -13,11 +13,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - capi
-  - ceph
-  - observability
-  - openstack
-  - ucp
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: cert-manager
+spec:
+  chartName: cert-manager
+  clusterSelector:
+    matchLabels:
+      cert-manager: enabled
+  namespace: cert-manager
+  options:
+    waitForJobs: true
+    wait: true
+    timeout: 5m
+    install:
+      createNamespace: true
+      includeCRDs: true
+  releaseName: cert-manager
+  repoURL: https://charts.jetstack.io/
+  valuesTemplate: |
+    installCRDs: true
+  version: v1.12.2

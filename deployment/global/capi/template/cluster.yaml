@@ -1,0 +1,51 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: ""
+  labels:
+    cert-manager: enabled
+    cilium: enabled
+    hostpath-provisioner: enabled
+spec:
+  clusterNetwork:
+    serviceDomain: cluster.local
+    services:
+      cidrBlocks:
+        - ""
+    pods:
+      cidrBlocks:
+        - ""
+  topology:
+    class: ""
+    version: v1.27.3
+    controlPlane:
+      metadata: {}
+      replicas: 1
+    workers:
+      machineDeployments:
+        - class: default-worker
+          name: md-0
+          metadata: {}
+          replicas: 0
+    variables:
+      - name: podSecurityStandard
+        value:
+          audit: restricted
+          enabled: true
+          enforce: baseline
+          warn: restricted

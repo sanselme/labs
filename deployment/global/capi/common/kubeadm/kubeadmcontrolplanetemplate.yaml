@@ -1,0 +1,61 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlaneTemplate
+metadata:
+  name: capi-control-plane
+spec:
+  template:
+    spec:
+      kubeadmConfigSpec:
+        useExperimentalRetryJoin: true
+        clusterConfiguration:
+          apiServer:
+            extraArgs:
+              cloud-provider: external
+              enable-hostpath-provisioner: "true"
+          controllerManager:
+            extraArgs:
+              cloud-provider: external
+              enable-hostpath-provisioner: "true"
+              feature-gates: RotateKubeletServerCertificate=true
+        initConfiguration:
+          localAPIEndpoint:
+            advertiseAddress: ""
+          nodeRegistration:
+            criSocket: unix:///var/run/containerd/containerd.sock
+            ignorePreflightErrors:
+              - Swap
+              - DirAvailable--etc-kubernetes-manifests
+              - FileAvailable--etc-kubernetes-kubelet.conf
+            kubeletExtraArgs:
+              cloud-provider: external
+              feature-gates: RotateKubeletServerCertificate=true
+        joinConfiguration:
+          controlPlane:
+            localAPIEndpoint:
+              advertiseAddress: ""
+          nodeRegistration:
+            criSocket: unix:///var/run/containerd/containerd.sock
+            ignorePreflightErrors:
+              - Swap
+              - DirAvailable--etc-kubernetes-manifests
+              - FileAvailable--etc-kubernetes-kubelet.conf
+            kubeletExtraArgs:
+              cloud-provider: external
+              feature-gates: RotateKubeletServerCertificate=true
+        files: []
+        preKubeadmCommands: []

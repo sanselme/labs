@@ -19,5 +19,5 @@ namespace: tenant
 resources:
   - apiserver.yaml
   - broker.yaml
-  - imc.yaml
+  - namespace.yaml
   - service.yaml

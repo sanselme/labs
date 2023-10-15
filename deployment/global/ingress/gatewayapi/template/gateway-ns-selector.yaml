@@ -13,28 +13,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: Gateway
 metadata:
-  name: uptime-kuma
+  name: default
+  annotations:
+    cert-manager.io/cluster-issuer: default-ca-issuer
 spec:
-  chart:
-    spec:
-      chart: uptime-kuma
-      reconcileStrategy: ChartVersion
-      sourceRef:
-        kind: HelmRepository
-        name: truecharts
-        namespace: sre
-      version: 6.0.26
-  install:
-    crds: Create
-    createNamespace: true
-    replace: true
-  interval: 1m0s
-  upgrade:
-    crds: CreateReplace
-  postRenderers:
-    - kustomize:
-        images:
-          - name: tccr.io/truecharts/uptime-kuma
+  gatewayClassName: cilium
+  listeners:
+    - name: https
+      hostname: "*.default.svc.cluster.local"
+      port: 443
+      protocol: HTTPS
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.kubernetes.io/name: default
+      tls:
+        certificateRefs:
+          - name: default-tls

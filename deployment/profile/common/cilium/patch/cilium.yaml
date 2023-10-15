@@ -104,11 +104,11 @@ spec:
     proxy:
       prometheus:
         enabled: true
-    # gatewayAPI:
-    #   enabled: true
-    #   secretsNamespace:
-    #     create: false
-    #     name: kube-system
+    gatewayAPI:
+      enabled: true
+      secretsNamespace:
+        create: false
+        name: kube-system
     operator:
       dashboards:
         enabled: true

@@ -25,7 +25,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: docker
-        namespace: flux-system
+        namespace: sre
       version: 1.0.2
   install:
     crds: Create

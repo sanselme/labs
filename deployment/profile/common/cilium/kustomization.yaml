@@ -18,6 +18,7 @@ kind: Kustomization
 namespace: kube-system
 components:
   - ../../../global/certmanager/issuer
+  - ../../../global/ingress/gatewayapi/crd
 resources:
   - ../../../global/cni/cilium
 patches:

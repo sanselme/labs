@@ -13,12 +13,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: messaging.knative.dev/v1alpha1
-kind: InMemoryChannel
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
 metadata:
-  name: default
+  name: app
 spec:
-  delivery:
-    backoffDelay: PT0.5S
-    backoffPolicy: exponential
-    retry: 5
+  hostnames:
+    - app.default.svc.cluster.local
+  parentRefs:
+    - name: default
+  rules:
+    - backendRefs:
+        - name: app
+          port: 8080
+      matches:
+        - path:
+            type: PathPrefix
+            value: /

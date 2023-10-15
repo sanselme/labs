@@ -16,17 +16,17 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: uptime-kuma
+  name: nginx
 spec:
   chart:
     spec:
-      chart: uptime-kuma
+      chart: bintnami/nginx-ingress-controller
       reconcileStrategy: ChartVersion
       sourceRef:
         kind: HelmRepository
-        name: truecharts
+        name: docker
         namespace: sre
-      version: 6.0.26
+      version: 9.7.7
   install:
     crds: Create
     createNamespace: true
@@ -37,4 +37,5 @@ spec:
   postRenderers:
     - kustomize:
         images:
-          - name: tccr.io/truecharts/uptime-kuma
+          - name: docker.io/bitnami/nginx
+          - name: docker.io/bitnami/nginx-ingress-controller

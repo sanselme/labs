@@ -18,6 +18,7 @@ kind: Kustomization
 resources:
   - ../../profile/common
   - ../../profile/cruiser
+  - ../../profile/operators
   # - ../../profile/carrier/ceph
 patches:
   - path: patch/cilium.yaml

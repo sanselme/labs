@@ -13,28 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: uptime-kuma
-spec:
-  chart:
-    spec:
-      chart: uptime-kuma
-      reconcileStrategy: ChartVersion
-      sourceRef:
-        kind: HelmRepository
-        name: truecharts
-        namespace: sre
-      version: 6.0.26
-  install:
-    crds: Create
-    createNamespace: true
-    replace: true
-  interval: 1m0s
-  upgrade:
-    crds: CreateReplace
-  postRenderers:
-    - kustomize:
-        images:
-          - name: tccr.io/truecharts/uptime-kuma
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - release.yaml
+  - source.yaml

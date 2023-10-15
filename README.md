@@ -23,41 +23,41 @@
 
 Install packages:
 
+- [cilium](https://cilium.io/)
 - [docker](https://docs.docker.com/get-docker/)
-- [flux](https://fluxcd.io/docs/installation/)
 - [helm](https://helm.sh/docs/intro/install/)
 - [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - [kustomize](https://kustomize.io/)
 
-Create a Kubernetes cluster
-
-[Install flux](#install), generate and apply manifests:
+### sandbox cluster
 
 ```bash
-kustomize build "./deployment/site/${CLUSTER_NAME}/secrets" \
-| tee /tmp/secrets.yaml \
-| kubectl apply -f -
+./tools/kind-cluster.sh
 
-# Optionaly, install cilium:
-kustomize build "./deployment/site/${CLUSTER_NAME}/cni" \
-| tee /tmp/cni.yaml \
-| kubectl apply -f -
+# optionally: to include ceph (also uncomment ceph related lines)
+./tools/kind-prepare-ceph.sh
 
-# Optionaly, install rook-ceph:
-kustomize build "./deployment/site/${CLUSTER_NAME}/csi" \
-| tee /tmp/csi.yaml \
-| kubectl apply -f -
-
-kustomize build "./deployment/site/${CLUSTER_NAME}" \
-| tee /tmp/site.yaml \
-| kubectl apply -f -
+# deploy sandbox workload
+./tools/sandbox.sh
 ```
 
-### Install
+### bootstrap docker (k0smotron)
 
 ```bash
-flux install --namespace=flux-system --components-extra="${FLUX_EXTRA_COMPONENTS}"
+./tools/bootstrap-docker.sh
+```
+
+### bootstrap kubernetes (k0smotron - single node)
+
+```bash
+./tools/bootstrap-kubernetes.sh
+```
+
+### bootstrap multipass (capi - 3 nodes)
+
+```bash
+./tools/bootstrap-multipass.sh
 ```
 
 ---

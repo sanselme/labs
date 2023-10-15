@@ -37,6 +37,19 @@ KUBECTL_CMD="$(command -v kubectl)"
 [[ -z ${KIND_CMD} ]] && echo "kind is not installed" && exit 1
 [[ -z ${KUBECTL_CMD} ]] && echo "kubectl is not installed" && exit 1
 
+# generate k0s config
+gen_config_k0s() {
+  K0S_CONFIG_FILE="${1}"
+  [[ -z ${K0S_CONFIG_FILE} ]] && echo "Usage: $0 <k0s-config-file>" && exit 1
+
+  cp -f config/k0s/k0s.tpl "${K0S_CONFIG_FILE}"
+  sed -i '' 's/# //g' "${K0S_CONFIG_FILE}"
+
+  yq -i 'del(.spec.api.externalAddress)' "${K0S_CONFIG_FILE}"
+  yq -i 'del(.spec.api.extraArgs)' "${K0S_CONFIG_FILE}"
+  yq -i '.metadata.name = "docker"' "${K0S_CONFIG_FILE}"
+}
+
 # create kind config if not present
 create_kind_config() {
   DEFAULT_CNI=${1}

@@ -3,4 +3,5 @@
 !.gitignore
 !*/.gitkeep
 !boilerplate.txt
+!docker/docker-compose.yaml
 !pkg.txt

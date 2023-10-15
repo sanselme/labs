@@ -21,9 +21,9 @@ source scripts/load-env.sh
 # generate workload config
 kustomize build deployment/site/sandbox >"hack/${CLUSTER_NAME}.yaml"
 kustomize build deployment/site/sandbox/network >"hack/${CLUSTER_NAME}-network.yaml"
-kustomize build deployment/site/sandbox/secrets >"hack/${CLUSTER_NAME}-secrets.yaml"
+kustomize build deployment/site/sandbox/secrets >"hack/${CLUSTER_NAME}-secret.yaml"
 
 # deploy workload
 kubectl apply -f "hack/${CLUSTER_NAME}.yaml"
 kubectl apply -f "hack/${CLUSTER_NAME}-network.yaml"
-kubectl apply -f "hack/${CLUSTER_NAME}-secrets.yaml"
+kubectl apply -f "hack/${CLUSTER_NAME}-secret.yaml"

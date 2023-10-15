@@ -33,9 +33,9 @@ export KUBECONFIG="hack/docker/kubeconfig.yaml"
 # generate workload config
 kustomize build deployment/site/wordpress >"hack/wordpress.yaml"
 kustomize build deployment/site/wordpress/network >"hack/wordpress-network.yaml"
-kustomize build deployment/site/wordpress/secrets >"hack/wordpress-secrets.yaml"
+kustomize build deployment/site/wordpress/secrets >"hack/wordpress-secret.yaml"
 
 # deploy workload
 kubectl apply -f "hack/wordpress.yaml"
 kubectl apply -f "hack/wordpress-network.yaml"
-kubectl apply -f "hack/wordpress-secrets.yaml"
+kubectl apply -f "hack/wordpress-secret.yaml"

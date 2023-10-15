@@ -124,6 +124,12 @@ for i in {1..3}; do
   multipass exec "${MULTIPASS_NAME_PREFIX}-0${i}" -- networkctl
 done
 
-# deploy workload
+# generate workload config
 kustomize build deployment/site/skiff >"hack/skiff.yaml"
+kustomize build deployment/site/skiff/network >"hack/skiff-network.yaml"
+kustomize build deployment/site/skiff/secrets >"hack/skiff-secret.yaml"
+
+# deploy workload
 kubectl apply -f "hack/skiff.yaml"
+kubectl apply -f "hack/skiff-network.yaml"
+kubectl apply -f "hack/skiff-secret.yaml"

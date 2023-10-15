@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 set -e
+source scripts/load-env.sh
 
 : "${CEPH_REPO:="$(yq '.spec.url' deployment/global/csi/ceph/rook/source.yaml)"}"
 : "${CEPH_VERSION:="$(yq '.spec.chart.spec.version' deployment/global/csi/ceph/rook/operator.yaml)"}"

@@ -16,23 +16,37 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: cert-manager
+  name: prometheus
 spec:
-  dependsOn:
-    - name: prometheus
-      namespace: observability
   values:
-    installCRDs: true
-    featureGates: ExperimentalGatewayAPISupport=true
-    podDnsPolicy: None
-    podDnsConfig:
-      nameservers:
-        - 1.1.1.1
-        - 9.9.9.9
-    ingressShim:
-      defaultIssuerName: default-ca-issuer
-      defaultIssuerKind: ClusterIssuer
+    global:
+      storageClass: ceph-block
+    operator:
+      resources: {}
+      configReloaderResources: {}
     prometheus:
-      enabled: true
-      servicemonitor:
-        enabled: true
+      externalUrl: ""
+      resources: {}
+      enableAdminAPI: false
+      persistence:
+        enabled: false
+      thanos:
+        create: false
+        prometheusUrl: ""
+        resources:
+          limits: {}
+          requests: {}
+      configReloader:
+        service:
+          enabled: false
+        serviceMonitor:
+          enabled: true
+    alertmanager:
+      externalUrl: ""
+      resources: {}
+      persistence:
+        enabled: false
+    blackboxExporter:
+      resources:
+        limits: {}
+        requests: {}

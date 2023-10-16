@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,27 +14,31 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
----
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: cert-manager
-spec:
-  dependsOn:
-    - name: prometheus
-      namespace: observability
-  values:
-    installCRDs: true
-    featureGates: ExperimentalGatewayAPISupport=true
-    podDnsPolicy: None
-    podDnsConfig:
-      nameservers:
-        - 1.1.1.1
-        - 9.9.9.9
-    ingressShim:
-      defaultIssuerName: default-ca-issuer
-      defaultIssuerKind: ClusterIssuer
-    prometheus:
-      enabled: true
-      servicemonitor:
-        enabled: true
+set -e
+source scripts/load-env.sh
+
+# generate key pair
+gpg --batch --full-generate-key <<EOF
+%no-protection
+Key-Type: 1
+Key-Length: 4096
+Subkey-Type: 1
+Subkey-Length: 4096
+Expire-Date: 0
+Name-Comment: "${KEY_COMMENT}"
+Name-Real: "${KEY_NAME}"
+EOF
+
+PGP="$(gpg --list-keys "${KEY_NAME}" | head -n +2 | tail -n 1 | tr -d ' ')"
+export PGP
+
+# export public key
+gpg --export --armor "${PGP}" >"${PUB_KEY}"
+
+# generate sops config
+cat <<EOF | envsubst | tee "${SOPS_CONFIG}"
+creation_rules:
+  - path_regex: .*.yaml
+    encrypted_regex: ^(data|stringData|password|token)$
+    pgp: ${PGP}
+EOF

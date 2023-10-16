@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,27 +14,23 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
----
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: cert-manager
-spec:
-  dependsOn:
-    - name: prometheus
-      namespace: observability
-  values:
-    installCRDs: true
-    featureGates: ExperimentalGatewayAPISupport=true
-    podDnsPolicy: None
-    podDnsConfig:
-      nameservers:
-        - 1.1.1.1
-        - 9.9.9.9
-    ingressShim:
-      defaultIssuerName: default-ca-issuer
-      defaultIssuerKind: ClusterIssuer
-    prometheus:
-      enabled: true
-      servicemonitor:
-        enabled: true
+set -ex
+source scripts/load-env.sh
+source .env
+
+# create kind cluster
+./tools/kind-cluster.sh
+
+# prepare loop devices for ceph cluster
+./tools/kind-prepare-ceph.sh
+docker container exec -it "${CLUSTER_NAME}-control-plane" lsblk
+
+# check cluster
+kubectl cluster-info
+kubectl get node -o wide
+kubectl get pod -A -o wide
+helm ls -A
+
+# bootstrap flux
+./tools/sops/apply.sh cicd
+./tools/flux/bootstrap.sh main maas

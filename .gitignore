@@ -180,6 +180,7 @@ Dockerfile.cross
 *~
 
 # Ignore
+*.DS_Store
 *.env*
 *.input*
 *.pub

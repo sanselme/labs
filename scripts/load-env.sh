@@ -25,6 +25,12 @@ export K0S_CONFIG_FILE="hack/kubernetes/k0s.yaml"
 export K0SCTL_CONFIG_FILE="hack/kubernetes/cluster.yaml"
 export SSH_PUB_KEY_FILE="${HOME}/.ssh/id_ed25519.pub"
 
+export KEY_COMMENT="test key for sops"
+export KEY_NAME="sandbox"
+export PUB_KEY="${1:-build/.sops.pub.asc}"
+export SEC_KEY="${2:-build/.sops.asc}"
+export SOPS_CONFIG="${3:-build/.sops.yaml}"
+
 export BITNAMI="oci://registry-1.docker.io/bitnamicharts"
 
 # verify dependencies are installed
@@ -98,9 +104,9 @@ create_kind_cluster() {
 
   # FIXME: remove sandard storageclass if requested
   if [[ -n ${NO_STANDARD_SC} ]]; then
-    kubectl delete storageclass standard
-    kubectl delete deployment -n local-path-storage local-path-provisioner
-    kubectl delete namespaces local-path-storage
+    kubectl delete storageclass standard || echo "storageclass not found"
+    kubectl delete deployment -n local-path-storage local-path-provisioner || echo "local-path-provisioner not found"
+    kubectl delete namespaces local-path-storage || echo "local-path-storage not found"
   fi
 }
 
@@ -121,9 +127,10 @@ install_cilium() {
 
 # install flux
 install_flux() {
-  helm upgrade flux \
-    --create-namespace \
-    --install "${BITNAMI}/flux" \
-    --namespace sre \
-    --version "${FLUX_VERSION}"
+  [[ -z "$(helm ls -n sre | awk /flux/)" ]] &&
+    helm upgrade flux \
+      --create-namespace \
+      --install "${BITNAMI}/flux" \
+      --namespace sre \
+      --version "${FLUX_VERSION}" || echo "Flux is already installed!!!"
 }

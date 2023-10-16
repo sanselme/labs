@@ -16,23 +16,23 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: cert-manager
+  name: rook-ceph-operator
 spec:
-  dependsOn:
-    - name: prometheus
-      namespace: observability
   values:
-    installCRDs: true
-    featureGates: ExperimentalGatewayAPISupport=true
-    podDnsPolicy: None
-    podDnsConfig:
-      nameservers:
-        - 1.1.1.1
-        - 9.9.9.9
-    ingressShim:
-      defaultIssuerName: default-ca-issuer
-      defaultIssuerKind: ClusterIssuer
-    prometheus:
-      enabled: true
-      servicemonitor:
+    allowLoopDevices: false
+    csi:
+      enableMetadata: true
+      serviceMonitor:
         enabled: true
+      csiAddons:
+        enabled: true
+      nfs:
+        enabled: true
+      topology:
+        enabled: true
+        domainLabels:
+          - kubernetes.io/hostname
+      readAffinity:
+        enabled: true
+    monitoring:
+      enabled: true

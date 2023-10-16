@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,27 +14,21 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
----
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: cert-manager
-spec:
-  dependsOn:
-    - name: prometheus
-      namespace: observability
-  values:
-    installCRDs: true
-    featureGates: ExperimentalGatewayAPISupport=true
-    podDnsPolicy: None
-    podDnsConfig:
-      nameservers:
-        - 1.1.1.1
-        - 9.9.9.9
-    ingressShim:
-      defaultIssuerName: default-ca-issuer
-      defaultIssuerKind: ClusterIssuer
-    prometheus:
-      enabled: true
-      servicemonitor:
-        enabled: true
+set -e
+source scripts/load-env.sh
+
+DIR="${1}"
+[[ -z ${DIR} ]] && echo "no directory provided" && exit 1
+
+FILES="$(find "${DIR}" -type f -name "*.yaml" ! -name kustomization.yaml)"
+[[ -z ${FILES} ]] && echo "no files found" && exit 1
+
+# encrypts file with sops
+echo "encrypting files in ${DIR}..."
+for file in ${FILES[@]}; do
+  sops \
+    --encrypt \
+    --config "${SOPS_CONFIG}" \
+    --in-place "${file}" \
+    --pgp "${PGP}"
+done

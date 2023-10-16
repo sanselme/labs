@@ -17,10 +17,12 @@
 set -e
 source scripts/load-env.sh
 
-GITHUB_REPO="${GITHUB_REPO:-$1}"
-GITHUB_TOKEN="${GITHUB_TOKEN:-$2}"
-GITHUB_USER="${GITHUB_USER:-$3}"
-SITE_NAME="${SITE_NAME:-$4}"
+GIT_BRANCH="${GIT_BRANCH:-1}"
+SITE_NAME="${SITE_NAME:-$2}"
+
+GITHUB_REPO="${GITHUB_REPO:-$3}"
+GITHUB_TOKEN="${GITHUB_TOKEN:-$4}"
+GITHUB_USER="${GITHUB_USER:-$5}"
 
 # check parameters
 [[ -z ${GITHUB_REPO} ]] && echo "GITHUB_REPO is not set" && exit 1
@@ -33,7 +35,7 @@ flux check --pre
 
 # bootstrap flux
 flux bootstrap github \
-  --branch main \
+  --branch "${GIT_BRANCH}" \
   --namespace sre \
   --owner "${GITHUB_USER}" \
   --path "deployment/site/${SITE_NAME}" \

@@ -2,32 +2,35 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: sre
+  name: cicd
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
-  name: maas
-  namespace: sre
+  name: labs
+  namespace: cicd
 spec:
   interval: 1m
   url: https://github.com/sanselme/labs.git
   ref:
     branch: dev
   secretRef:
-    name: flux-system
+    name: sops-gpg
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: maas
-  namespace: sre
+  namespace: cicd
 spec:
   interval: 30m0s
-  path: ./manifest
+  path: deployment/site/maas/manifest
   prune: true
   retryInterval: 2m0s
-  targetNamespace: ucp
   timeout: 3m0s
   wait: true
   sourceRef:
@@ -38,13 +41,12 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: maas-network
-  namespace: sre
+  namespace: cicd
 spec:
   interval: 30m0s
-  path: ./network
+  path: deployment/site/maas/network
   prune: true
   retryInterval: 2m0s
-  targetNamespace: ucp
   timeout: 3m0s
   wait: true
   sourceRef:
@@ -55,13 +57,12 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: maas-secret
-  namespace: sre
+  namespace: cicd
 spec:
   interval: 30m0s
-  path: ./secret
+  path: deployment/site/maas/secret
   prune: true
   retryInterval: 2m0s
-  targetNamespace: ucp
   timeout: 3m0s
   wait: true
   sourceRef:

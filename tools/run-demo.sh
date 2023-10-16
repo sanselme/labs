@@ -14,18 +14,23 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
-set -e
+set -ex
 source scripts/load-env.sh
+source .env
 
-# export secret key
-gpg --export-secret-keys \
-  --armor sandbox |
-  tee "${SEC_KEY}"
+# create kind cluster
+./tools/kind-cluster.sh
 
-# create secret
-kubectl create secret generic sops-gpg \
-  --dry-run=client \
-  --from-file sops.asc="${SEC_KEY}" \
-  --namespace sre \
-  --output yaml |
-  kubectl apply -f -
+# prepare loop devices for ceph cluster
+./tools/kind-prepare-ceph.sh
+docker container exec -it "${CLUSTER_NAME}-control-plane" lsblk
+
+# check cluster
+kubectl cluster-info
+kubectl get node -o wide
+kubectl get pod -A -o wide
+helm ls -A
+
+# bootstrap flux
+./tools/sops/apply.sh
+./tools/flux/bootstrap.sh dev maas

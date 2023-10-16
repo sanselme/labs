@@ -104,9 +104,9 @@ create_kind_cluster() {
 
   # FIXME: remove sandard storageclass if requested
   if [[ -n ${NO_STANDARD_SC} ]]; then
-    kubectl delete storageclass standard
-    kubectl delete deployment -n local-path-storage local-path-provisioner
-    kubectl delete namespaces local-path-storage
+    kubectl delete storageclass standard || echo "storageclass not found"
+    kubectl delete deployment -n local-path-storage local-path-provisioner || echo "local-path-provisioner not found"
+    kubectl delete namespaces local-path-storage || echo "local-path-storage not found"
   fi
 }
 
@@ -127,9 +127,10 @@ install_cilium() {
 
 # install flux
 install_flux() {
-  helm upgrade flux \
-    --create-namespace \
-    --install "${BITNAMI}/flux" \
-    --namespace sre \
-    --version "${FLUX_VERSION}"
+  [[ -z "$(helm ls -n sre | awk /flux/)" ]] &&
+    helm upgrade flux \
+      --create-namespace \
+      --install "${BITNAMI}/flux" \
+      --namespace sre \
+      --version "${FLUX_VERSION}" || echo "Flux is already installed!!!"
 }

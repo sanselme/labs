@@ -30,6 +30,18 @@ Install packages:
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - [kustomize](https://kustomize.io/)
 
+Create environment variables
+
+```bash
+cp -f .env.example .env
+```
+
+Configure environment variables and run demo
+
+```bash
+./tools/run-demo.sh
+```
+
 ### sandbox cluster
 
 ```bash

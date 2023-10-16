@@ -17,28 +17,25 @@
 set -e
 source scripts/load-env.sh
 
-# generate key pair
-gpg --batch --full-generate-key <<EOF
-%no-protection
-Key-Type: 1
-Key-Length: 4096
-Subkey-Type: 1
-Subkey-Length: 4096
-Expire-Date: 0
-Name-Comment: "${KEY_COMMENT}"
-Name-Real: "${KEY_NAME}"
-EOF
+GITHUB_REPO="${GITHUB_REPO:-$1}"
+GITHUB_TOKEN="${GITHUB_TOKEN:-$2}"
+GITHUB_USER="${GITHUB_USER:-$3}"
+SITE_NAME="${SITE_NAME:-$4}"
 
-PGP="$(gpg --list-keys "${KEY_NAME}" | head -n +2 | tail -n 1 | tr -d ' ')"
-export PGP
+# check parameters
+[[ -z ${GITHUB_REPO} ]] && echo "GITHUB_REPO is not set" && exit 1
+[[ -z ${GITHUB_TOKEN} ]] && echo "GITHUB_TOKEN is not set" && exit 1
+[[ -z ${GITHUB_USER} ]] && echo "GITHUB_USER is not set" && exit 1
+[[ -z ${SITE_NAME} ]] && echo "SITE_NAME is not set" && exit 1
 
-# export public key
-gpg --export --armor "${PGP}" >"${PUB_KEY}"
+# check prerequisites
+flux check --pre
 
-# generate sops config
-cat <<EOF | envsubst | tee "${SOPS_CONFIG}"
-creation_rules:
-  - path_regex: .*.yaml
-    encrypted_regex: ^(data|stringData|password|token)$
-    pgp: "${PGP}"
-EOF
+# bootstrap flux
+flux bootstrap github \
+  --branch main \
+  --namespace sre \
+  --owner "${GITHUB_USER}" \
+  --path "deployment/site/${SITE_NAME}" \
+  --repository "${GITHUB_REPO}" \
+  --token-auth

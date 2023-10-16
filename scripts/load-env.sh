@@ -25,8 +25,11 @@ export K0S_CONFIG_FILE="hack/kubernetes/k0s.yaml"
 export K0SCTL_CONFIG_FILE="hack/kubernetes/cluster.yaml"
 export SSH_PUB_KEY_FILE="${HOME}/.ssh/id_ed25519.pub"
 
-export KEY_NAME="sandbox"
 export KEY_COMMENT="test key for sops"
+export KEY_NAME="sandbox"
+export PUB_KEY="${1:-hack/.sops.pub.asc}"
+export SEC_KEY="${2:-hack/.sops.asc}"
+export SOPS_CONFIG="${3:-hack/.sops.yaml}"
 
 export BITNAMI="oci://registry-1.docker.io/bitnamicharts"
 

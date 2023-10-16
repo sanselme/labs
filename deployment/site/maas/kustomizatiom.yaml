@@ -1,0 +1,73 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sre
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: maas
+  namespace: sre
+spec:
+  interval: 1m
+  url: https://github.com/sanselme/labs.git
+  ref:
+    branch: dev
+  secretRef:
+    name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: maas
+  namespace: sre
+spec:
+  interval: 30m0s
+  path: ./manifest
+  prune: true
+  retryInterval: 2m0s
+  targetNamespace: ucp
+  timeout: 3m0s
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: labs
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: maas-network
+  namespace: sre
+spec:
+  interval: 30m0s
+  path: ./network
+  prune: true
+  retryInterval: 2m0s
+  targetNamespace: ucp
+  timeout: 3m0s
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: labs
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: maas-secret
+  namespace: sre
+spec:
+  interval: 30m0s
+  path: ./secret
+  prune: true
+  retryInterval: 2m0s
+  targetNamespace: ucp
+  timeout: 3m0s
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: labs
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-gpg

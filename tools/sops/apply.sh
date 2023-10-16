@@ -17,28 +17,14 @@
 set -e
 source scripts/load-env.sh
 
-# generate key pair
-gpg --batch --full-generate-key <<EOF
-%no-protection
-Key-Type: 1
-Key-Length: 4096
-Subkey-Type: 1
-Subkey-Length: 4096
-Expire-Date: 0
-Name-Comment: "${KEY_COMMENT}"
-Name-Real: "${KEY_NAME}"
-EOF
+# export secret key
+gpg --export-secret-keys \
+  --armor "${PGP}" |
+  tee "${SEC_KEY}"
 
-PGP="$(gpg --list-keys "${KEY_NAME}" | head -n +2 | tail -n 1 | tr -d ' ')"
-export PGP
-
-# export public key
-gpg --export --armor "${PGP}" >"${PUB_KEY}"
-
-# generate sops config
-cat <<EOF | envsubst | tee "${SOPS_CONFIG}"
-creation_rules:
-  - path_regex: .*.yaml
-    encrypted_regex: ^(data|stringData|password|token)$
-    pgp: "${PGP}"
-EOF
+# create secret
+kubectl create secret generic sops-gpg \
+  --dry-run=client -o yaml \
+  --from-file=sops.asc=/dev/stdin \
+  --namespace=flux-system |
+  kubectl apply -f -

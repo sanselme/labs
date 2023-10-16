@@ -33,4 +33,4 @@ helm ls -A
 
 # bootstrap flux
 ./tools/sops/apply.sh cicd
-./tools/flux/bootstrap.sh dev maas
+./tools/flux/bootstrap.sh main maas

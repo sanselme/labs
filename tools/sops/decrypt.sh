@@ -17,12 +17,18 @@
 set -e
 source scripts/load-env.sh
 
-FILE_PATH="${1}"
-[[ -z ${FILE_PATH} ]] && echo "File path is required" && exit 1
+DIR="${1}"
+[[ -z ${DIR} ]] && echo "no directory provided" && exit 1
 
-# encrypts file with sops
-sops \
-  --decrypt \
-  --config "${SOPS_CONFIG}" \
-  --in-place "${FILE_PATH}" \
-  --pgp "${PGP}"
+FILES="$(find "${DIR}" -type f -name "*.yaml" ! -name kustomization.yaml)"
+[[ -z ${FILES} ]] && echo "no files found" && exit 1
+
+# decrypts file with sops
+echo "decrypting files in ${DIR}..."
+for file in ${FILES[@]}; do
+  sops \
+    --decrypt \
+    --config "${SOPS_CONFIG}" \
+    --in-place "${file}" \
+    --pgp "${PGP}"
+done

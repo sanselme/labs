@@ -40,5 +40,5 @@ cat <<EOF | envsubst | tee "${SOPS_CONFIG}"
 creation_rules:
   - path_regex: .*.yaml
     encrypted_regex: ^(data|stringData|password|token)$
-    pgp: "${PGP}"
+    pgp: ${PGP}
 EOF

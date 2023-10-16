@@ -26,66 +26,22 @@ spec:
   values:
     # routingMode: native
     # tunnel: disabled
-    bandwidthManager:
-      bbr: false
+    # ipv4NativeRoutingCIDR: 192.168.11.0/24
+    # devices:
+    #   - oam
     l2announcements:
       enabled: true
-      leaseDuration: 3s
-      leaseRenewDeadline: 1s
-      leaseRetryPeriod: 500ms
     # securityContext:
     #   privileged: true
-    bgpControlPlane:
-      enabled: true
-    pmtuDiscovery:
-      enabled: true
-    containerRuntime:
-      integration: auto
     ingressController:
       enabled: true
-      enforceHttps: true
       secretsNamespace:
         create: false
         name: kube-system
-    encryption:
-      enabled: false
-      type: wireguard
     externalIPs:
       enabled: true
-    hostFirewall:
-      enabled: true
-    hubble:
-      metrics:
-        dashboards:
-          enabled: true
-          namespace: observability
-        enableOpenMetrics: true
-        enabled:
-          - dns:query;ignoreAAAA
-          - drop
-          - tcp
-          - flow
-          - icmp
-          - http
-        serviceMonitor:
-          enabled: true
-      tls:
-        auto:
-          certManagerIssuerRef:
-            group: cert-manager.io
-            kind: Issuer
-            name: default-ca-issuer
-          method: certmanager
-      ui:
-        enabled: false
-      relay:
-        enabled: false
-        prometheus:
-          enabled: true
-          serviceMonitor:
-            enabled: true
-    ipam:
-      mode: kubernetes
+    # hostFirewall:
+    #   enabled: true
     monitor:
       enabled: true
     loadBalancer:

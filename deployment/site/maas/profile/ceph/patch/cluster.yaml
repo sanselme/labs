@@ -18,18 +18,11 @@ kind: HelmRelease
 metadata:
   name: rook-ceph-cluster
 spec:
-  dependsOn:
-    - name: default-cluster-issuer
-      namespace: cert-manager
-    - name: prometheus
-      namespace: observability
-    - name: rook-ceph-operator
-  # postRenderers:
-  #   - kustomize:
-  #       images:
-  #         - name: quay.io/ceph/ceph
-  #           newName: ghcr.io/gpu-ninja/ceph-images/ceph
-  #           newTag: latest
+  postRenderers:
+    - kustomize:
+        images:
+          - name: quay.io/ceph/ceph
+            newTag: v18.2.0
   values:
     operatorNamespace: rook-ceph
     monitoring:
@@ -45,12 +38,20 @@ spec:
       osd_pool_default_size = 1
     toolbox:
       enabled: true
+      image: quay.io/ceph/ceph:v18.2.0
+      resources:
+        limits:
+          cpu: null
+          memory: null
+        requests:
+          cpu: null
+          memory: null
     cephBlockPools:
       - name: ceph-blockpool
         spec:
           failureDomain: host
           replicated:
-            size: 3
+            size: 1
         storageClass:
           enabled: true
           name: ceph-block
@@ -73,12 +74,12 @@ spec:
         spec:
           metadataPool:
             replicated:
-              size: 3
+              size: 1
           dataPools:
             - name: data0
               failureDomain: host
               replicated:
-                size: 3
+                size: 1
           metadataServer:
             activeCount: 1
             resources: {}
@@ -107,9 +108,11 @@ spec:
       annotations:
         k10.kasten.io/is-snapshot-class: "true"
     cephClusterSpec:
+      cephVersion:
+        image: quay.io/ceph/ceph:v18.2.0
       dashboard:
         enabled: true
-        ssl: true
+        ssl: false # FIXME: dashboard ssl
       network:
         connections:
           encryption:
@@ -120,46 +123,94 @@ spec:
         #   cluster: cluster-conf
       crashCollector:
         disable: false
-      storage:
-        useAllNodes: true
-        useAllDevices: true
       mon:
-        count: 3
+        count: 1
       mgr:
-        count: 2
-        modules:
-          - name: rook
-            enabled: true
-          - name: k8sevents
-            enabled: true
-          - name: mirroring
-            enabled: true
-          - name: nfs
-            enabled: true
-          - name: osd_perf_query
-            enabled: true
-          - name: osd_support
-            enabled: true
-          - name: pg_autoscaler
-            enabled: true
-          - name: rgw
-            enabled: true
+        count: 1
+      storage:
+        useAllDevices: true
+        useAllNodes: true
+        devices: []
+        # - name: /dev/sdb
+        # - name: /dev/sdc
+        # - name: /dev/sdd
+      resources:
+        cleanup:
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
+        crashcollector:
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
+        exporter:
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
+        logcollector:
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
+        mgr:
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
+        mgr-sidecar:
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
+        mon:
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
+        osd:
+          limits:
+            cpu: null
+            memory: null
+          requests:
+            cpu: null
+            memory: null
+        prepareosd:
+          requests:
+            cpu: null
+            memory: null
     cephObjectStores:
       - name: ceph-objectstore
         spec:
           metadataPool:
             failureDomain: host
             replicated:
-              size: 3
+              size: 1
           dataPool:
             failureDomain: host
             erasureCoded:
               codingChunks: 0
               dataChunks: 0
             replicated:
-              size: 3
+              size: 1
           gateway:
-            instances: 2
+            instances: 1
             port: 80
             securePort: 443
         storageClass:

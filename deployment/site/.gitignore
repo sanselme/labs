@@ -2,6 +2,7 @@
 */**
 !.gitignore
 !codecloud
+!maas/**
 !sandbox
 !skiff
 !wordpress

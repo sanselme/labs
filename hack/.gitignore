@@ -1,6 +1,7 @@
 *.*
 */**
 !.gitignore
+!.sops.*
 !*/.gitkeep
 !boilerplate.txt
 !docker/docker-compose.yaml

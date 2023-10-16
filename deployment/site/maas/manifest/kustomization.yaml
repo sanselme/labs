@@ -23,11 +23,11 @@ resources:
   - observability
   - openebs
   - sre
-  - ucp
+  # - ucp
 patches:
   - path: patch/default-clusterissuer.yaml
   - path: patch/docker.yaml
-  - path: patch/pgcluster.yaml
   - path: patch/rook-ceph-cluster.yaml
   - path: patch/rook-ceph-operator.yaml
   - path: patch/trivy.yaml
+  # - path: patch/pgcluster.yaml

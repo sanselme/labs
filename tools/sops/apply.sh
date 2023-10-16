@@ -17,15 +17,19 @@
 set -e
 source scripts/load-env.sh
 
+NAMESPACE="${1}"
+[[ -z ${NAMESPACE} ]] && echo "Usage: $0 <namespace>" && exit 1
+
 # export secret key
 gpg --export-secret-keys \
   --armor sandbox |
   tee "${SEC_KEY}"
 
 # create secret
+kubectl create namespace "${NAMESPACE}" || echo "namespace already exists"
 kubectl create secret generic sops-gpg \
   --dry-run=client \
   --from-file sops.asc="${SEC_KEY}" \
-  --namespace sre \
+  --namespace "${NAMESPACE}" \
   --output yaml |
   kubectl apply -f -

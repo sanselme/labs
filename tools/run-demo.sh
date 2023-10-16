@@ -32,5 +32,5 @@ kubectl get pod -A -o wide
 helm ls -A
 
 # bootstrap flux
-./tools/sops/apply.sh
+./tools/sops/apply.sh cicd
 ./tools/flux/bootstrap.sh dev maas

@@ -30,6 +30,7 @@ export KEY_NAME="sandbox"
 export PUB_KEY="${1:-build/.sops.pub.asc}"
 export SEC_KEY="${2:-build/.sops.asc}"
 export SOPS_CONFIG="${3:-build/.sops.yaml}"
+export SEC_KEY_OP_TITLE="${1:-'sops - sandbox'}}"
 
 export BITNAMI="oci://registry-1.docker.io/bitnamicharts"
 

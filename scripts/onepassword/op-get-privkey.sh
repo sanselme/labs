@@ -14,24 +14,31 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
-set -e
-source scripts/load-env.sh
 
-NAMESPACE="${1}"
-[[ -z ${NAMESPACE} ]] && echo "Usage: $0 <namespace>" && exit 1
+: "${DOCUMENT_NAME:=$1}"
+: "${OUT_FILE:=$2}"
+: "${VAULT:=$3}"
 
-# FIXME: export secret key if not present on file and in gpg keystore
-# gpg --export-secret-keys \
-#   --armor sandbox |
-#   tee "${SEC_KEY}"
+# check required variables
+[[ -z ${DOCUMENT_NAME} ]] && echo "Document name is required!" && exit 1
+[[ -z ${OUT_FILE} ]] && echo "Output file is required!" && exit 1
+[[ -z ${VAULT} ]] && VAULT="Developer"
 
-# TODO: get secret key from onepassword otherwise
+# list vaults
+op vault list
 
-# create secret
-kubectl create namespace "${NAMESPACE}" || echo "namespace already exists"
-kubectl create secret generic sops-gpg \
-  --dry-run=client \
-  --from-file sops.asc="${SEC_KEY}" \
-  --namespace "${NAMESPACE}" \
-  --output yaml |
-  kubectl apply -f -
+# verify vault exist in list
+VAULT_LIST="$(op vault list --format=json | jq -r '.[].name')"
+if [[ ! ${VAULT_LIST} =~ ${VAULT} ]]; then
+  echo "Vault ${VAULT} not found"
+  exit 1
+fi
+
+# list documents
+op document list --vault "${VAULT}"
+
+# get sops privkey (force overwrite)
+op document get "${DOCUMENT_NAME}" \
+  --force \
+  --out-file "${OUT_FILE}" \
+  --vault "${VAULT}"

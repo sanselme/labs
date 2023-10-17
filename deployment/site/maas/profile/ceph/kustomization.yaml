@@ -16,8 +16,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: rook-ceph
-components:
-  - ../../../../global/csi/ceph/rook/cluster
+# components:
+#   - ../../../../global/csi/ceph/rook/cluster
 resources:
   - ../../../../global/csi/addons
   - ../../../../global/csi/ceph/rook
@@ -25,5 +25,5 @@ resources:
   - certificate.yaml
   - namespace.yaml
 patches:
-  - path: patch/cluster.yaml
   - path: patch/operator.yaml
+  # - path: patch/cluster.yaml

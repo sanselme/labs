@@ -19,7 +19,6 @@ kind: Kustomization
 resources:
   - certmanager
   - cilium
-  - externaldns
   - gatekeeper
   - observability
   - openebs

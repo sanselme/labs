@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,22 +14,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
----
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ../../../profile/operators
-  - ceph
-  - certmanager
-  - cilium
-  - observability
-  - openebs
-  - sre
-  - ucp
-patches:
-  - path: patch/default-clusterissuer.yaml
-  - path: patch/docker.yaml
-  - path: patch/pgcluster.yaml
-  - path: patch/rook-ceph-operator.yaml
-  - path: patch/trivy.yaml
-  # - path: patch/rook-ceph-cluster.yaml
+set -e
+
+REPO="oci://registry-1.docker.io/sanselme"
+VERSION="0.1.5"
+
+# deploy maas
+helm upgrade maas \
+  --create-namespace \
+  --install "${REPO}/maas" \
+  --namespace ucp \
+  --values deployment/site/maas/values.yaml \
+  --version "${VERSION}"

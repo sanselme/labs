@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,22 +14,25 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
----
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ../../../profile/operators
-  - ceph
-  - certmanager
-  - cilium
-  - observability
-  - openebs
-  - sre
-  - ucp
-patches:
-  - path: patch/default-clusterissuer.yaml
-  - path: patch/docker.yaml
-  - path: patch/pgcluster.yaml
-  - path: patch/rook-ceph-operator.yaml
-  - path: patch/trivy.yaml
-  # - path: patch/rook-ceph-cluster.yaml
+set -e
+
+MAAS="hack/maas/charts/maas"
+
+# clone repos
+[[ ! -d hack/osh ]] &&
+  git clone https://review.opendev.org/openstack/openstack-helm-infra.git hack/osh
+
+[[ ! -d hack/maas ]] &&
+  git clone https://review.opendev.org/airship/maas.git hack/maas
+
+# package helm-toolkit
+helm package hack/osh/helm-toolkit -d hack/
+
+# update dependencies
+HTK="$(find hack -name "helm-toolkit-*.tgz")"
+[[ ! -f "hack/maas/charts/deps/$(basename "${HTK}")" ]] &&
+  mkdir -p "${MAAS}/charts"
+cp -f "${HTK}" "${MAAS}/charts/"
+
+# package maas
+helm package "${MAAS}" -d hack/

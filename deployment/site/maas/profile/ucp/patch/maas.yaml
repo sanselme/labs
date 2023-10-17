@@ -18,9 +18,14 @@ kind: HelmRelease
 metadata:
   name: maas
 spec:
+  chart:
+    spec:
+      version: 0.1.5
   dependsOn:
-    - name: default-ca-issuer
-    - name: prostgresql
+    - name: default-cluster-issuer
+      namespace: cert-manager
+    - name: postgresql-operator
+      namespace: operators
   values:
     network:
       region_api:
@@ -31,26 +36,41 @@ spec:
     storage:
       syslog:
         pvc:
-          class_name: ceph-block
+          class_name: openebs-hostpath #ceph-block
       rackd:
         pvc:
-          class_name: ceph-block
+          class_name: openebs-hostpath #ceph-block
     conf:
-      ssh:
-        private_key: null
+      # bind:
+      #   override:
+      #   append:
+      #   cpus: 1
+      # curtin:
+      #   override: true
+      #   late_commands:
+      #     install_modules_extra: ["curtin", "in-target", "--", "apt-get", "-y", "install", "linux-modules-extra-4.15.0-88-generic"]
       cloudconfig:
         override: true
         sections:
-          bootcmd:
-            - rm -fr /var/lib/apt/lists
-            - sysctl net.ipv6.conf.all.disable_ipv6=1
-            - sysctl net.ipv6.conf.default.disable_ipv6=1
-            - sysctl net.ipv6.conf.lo.disable_ipv6=0
+          conf:
+            cloudconfig:
+              override: true
+              sections:
+                bootcmd:
+                  - rm -fr /var/lib/apt/lists
+                  - sysctl net.ipv6.conf.all.disable_ipv6=1
+                  - sysctl net.ipv6.conf.default.disable_ipv6=1
+                  - sysctl net.ipv6.conf.lo.disable_ipv6=0
       cache:
         enabled: true
       maas:
+        # override:
+        # append:
         url:
           maas_url: http://maas-region.ucp/MAAS
+        # cgroups:
+        #   disable_cgroups_region: true
+        #   disable_cgroups_rack: true
         ntp:
           disable_ntpd_region: true
           disable_ntpd_rack: true
@@ -61,9 +81,8 @@ spec:
             - 3.ca.pool.ntp.org
             - 4.ca.pool.ntp.org
         dns:
-          require_dnssec: "no"
+          require_dnssec: no
           dns_servers:
-            - 192.168.11.1
             - 1.1.1.1
             - 9.9.9.9
         images:
@@ -74,23 +93,23 @@ spec:
           secret:
             namespace: ucp
         syslog:
+          remote_syslog: null
           log_level: DEBUG
         extra_settings:
+          completed_intro: true
+          enable_analytics: false
+          network_discovery: disabled
           active_discovery_interval: 0
           enlist_commissioning: false
-          network_discovery: disabled
         system_user: null
         system_passwd: null
-        tls:
-          enabled: false
-          create: false
     pod:
       replicas:
-        rack: 2
-        region: 2
+        rack: 1
+        region:
         syslog: 1
       resources:
-        enabled: true
+        enabled: false
     endpoints:
       maas_ingress:
         hosts:
@@ -105,57 +124,51 @@ spec:
           default: http
         host_fqdn_override:
           public: maas.ucp.svc.cluster.local
-    cert_manager:
-      enabled: false
-      create: false
-      issuer:
-        kind: Issuer
-        name: maas-ca-issuer
     dependencies:
       static:
-        bootstrap_admin_user:
-          jobs:
-            - maas-db-sync
-          services:
-            - endpoint: internal
-              service: maas_region
-            - endpoint: internal
-              service: maas_db
-        db_init:
-          services:
-            - endpoint: internal
-              service: maas_db
-        db_sync:
-          jobs:
-            - maas-db-init
-        export_api_key:
-          jobs:
-            - maas-bootstrap-admin-user
-          services:
-            - endpoint: internal
-              service: maas_region
-            - endpoint: internal
-              service: maas_db
-        import_resources:
-          jobs:
-            - maas-bootstrap-admin-user
-          services:
-            - endpoint: internal
-              service: maas_region
-            - endpoint: internal
-              service: maas_db
         rack_controller:
+          services:
+            - service: maas_region
+              endpoint: internal
           jobs:
             - maas-export-api-key
-          services:
-            - endpoint: internal
-              service: maas_region
         region_controller:
           jobs:
             - maas-db-sync
           services:
-            - endpoint: internal
-              service: maas_db
+            - service: maas_db
+              endpoint: internal
+        db_init:
+          services:
+            - service: maas_db
+              endpoint: internal
+        db_sync:
+          jobs:
+            - maas-db-init
+        bootstrap_admin_user:
+          jobs:
+            - maas-db-sync
+          services:
+            - service: maas_region
+              endpoint: internal
+            - service: maas_db
+              endpoint: internal
+        import_resources:
+          jobs:
+            - maas-bootstrap-admin-user
+          services:
+            - service: maas_region
+              endpoint: internal
+            - service: maas_db
+              endpoint: internal
+        export_api_key:
+          jobs:
+            - maas-bootstrap-admin-user
+          services:
+            - service: maas_region
+              endpoint: internal
+            - service: maas_db
+              endpoint: internal
     manifests:
       configmap_ingress: false
       ingress_region: false
@@ -163,3 +176,9 @@ spec:
       rack_statefulset: true
       region_statefulset: true
       test_maas_api: false
+    cert_manager:
+      enabled: false
+      create: false
+      issuer:
+        kind: Issuer
+        name: default-ca-issuer

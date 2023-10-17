@@ -16,7 +16,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 CILIUM_VERSION="$(yq '.spec.chart.spec.version' deployment/global/cni/cilium/release.yaml)"
-FLUX_VERSION="$(yq '.spec.chart.spec.version' deployment/global/sre/flux/release.yaml)"
+FLUX_VERSION="$(yq '.spec.chart.spec.version' deployment/global/cicd/flux/release.yaml)"
 export CILIUM_VERSION FLUX_VERSION
 
 export CLUSTER_NAME="sandbox"

@@ -24,15 +24,15 @@ spec:
     - name: prometheus
       namespace: observability
   values:
-    # routingMode: native
-    # tunnel: disabled
-    # ipv4NativeRoutingCIDR: 192.168.11.0/24
-    # devices:
-    #   - oam
+    routingMode: native
+    tunnel: disabled
+    ipv4NativeRoutingCIDR: 192.168.11.0/24
+    devices:
+      - oam
     l2announcements:
       enabled: true
-    # securityContext:
-    #   privileged: true
+    securityContext:
+      privileged: true
     ingressController:
       enabled: true
       secretsNamespace:
@@ -40,12 +40,12 @@ spec:
         name: kube-system
     externalIPs:
       enabled: true
-    # hostFirewall:
-    #   enabled: true
+    hostFirewall:
+      enabled: true
     monitor:
       enabled: true
     loadBalancer:
-      # mode: dsr
+      mode: dsr
       serviceTopology: true
       algorithm: maglev
       l7:

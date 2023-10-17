@@ -16,13 +16,23 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 set -e
 
-REPO="oci://registry-1.docker.io/sanselme"
-VERSION="0.1.5"
+MAAS="hack/maas/charts/maas"
 
-# deploy maas
-helm upgrade maas \
-  --create-namespace \
-  --install "${REPO}/maas" \
-  --namespace ucp \
-  --values deployment/site/maas/values.yaml \
-  --version "${VERSION}"
+# clone repos
+[[ ! -d hack/osh ]] &&
+  git clone https://review.opendev.org/openstack/openstack-helm-infra.git hack/osh
+
+[[ ! -d hack/maas ]] &&
+  git clone https://review.opendev.org/airship/maas.git hack/maas
+
+# package helm-toolkit
+helm package hack/osh/helm-toolkit -d hack/
+
+# update dependencies
+HTK="$(find hack -name "helm-toolkit-*.tgz")"
+[[ ! -f "hack/maas/charts/deps/$(basename "${HTK}")" ]] &&
+  mkdir -p "${MAAS}/charts"
+cp -f "${HTK}" "${MAAS}/charts/"
+
+# package maas
+helm package "${MAAS}" -d hack/

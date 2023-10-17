@@ -17,12 +17,12 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: ucp
 resources:
-  - ../../../../global/services/ucp/maas
   - namespace.yaml
   - pgcluster.yaml
   - pgpooler.yaml
+  # - ../../../../global/services/ucp/maas
   # - ossclaim.yaml
   # - ossuser.yaml
   # - pgbackup.yaml
-patches:
-  - path: patch/maas.yaml
+patches: []
+# - path: patch/maas.yaml

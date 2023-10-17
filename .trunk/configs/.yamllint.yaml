@@ -10,5 +10,5 @@ rules:
     forbid-implicit-octal: true
   document-start: disable
   line-length:
-    max: 200
+    max: 800
     level: warning

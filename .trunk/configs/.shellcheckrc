@@ -5,5 +5,5 @@ disable=SC2312
 disable=SC2143
 
 # If you're having issues with shellcheck following source, disable the errors via:
-# disable=SC1090
-# disable=SC1091
+disable=SC1090
+disable=SC1091

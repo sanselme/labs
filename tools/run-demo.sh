@@ -31,6 +31,9 @@ kubectl get node -o wide
 kubectl get pod -A -o wide
 helm ls -A
 
+# label nodes
+kubectl label node --all ucp-control-plane=enabled
+
 # bootstrap flux
 ./tools/sops/apply.sh cicd
 ./tools/flux/bootstrap.sh main maas

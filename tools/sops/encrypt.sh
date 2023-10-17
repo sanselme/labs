@@ -25,7 +25,7 @@ FILES="$(find "${DIR}" -type f -name "*.yaml" ! -name kustomization.yaml)"
 
 # encrypts file with sops
 echo "encrypting files in ${DIR}..."
-for file in ${FILES[@]}; do
+for file in "${FILES[@]}"; do
   sops \
     --encrypt \
     --config "${SOPS_CONFIG}" \

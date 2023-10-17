@@ -1,1 +1,1 @@
-*.sops.asc
+!*.sops.pub.asc

@@ -23,7 +23,7 @@ spec:
       namespace: observability
   values:
     installCRDs: true
-    # featureGates: ExperimentalGatewayAPISupport=true
+    featureGates: ExperimentalGatewayAPISupport=true
     podDnsPolicy: None
     podDnsConfig:
       nameservers:

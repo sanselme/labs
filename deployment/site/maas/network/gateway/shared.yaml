@@ -13,22 +13,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: cert-manager
-components:
-  - ../../../../global/certmanager/clusterissuer
-resources:
-  - ../../../../global/certmanager
-  - certificate.yaml
-  - namespace.yaml
-patches:
-  - path: patch/certmanager.yaml
-  - path: patch/clusterissuer.yaml
-  - patch: |-
-      - op: replace
-        path: /metadata/name
-        value: default-cluster-issuer
-    target:
-      kind: HelmRelease
-      name: cluster-issuer
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: Gateway
+metadata:
+  name: default-shared-gtw
+  namespace: infra
+  annotations:
+    cert-manager.io/issuer: default-ca-issuer
+spec:
+  gatewayClassName: cilium
+  listeners:
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            group: ""
+            name: default-wildcard-cert
+            namespace: cert-manager
+      allowedRoutes:
+        namespaces:
+          from: All
+          # from: Selector
+          # selector:
+          #   matchLabels:
+          #     shared-gateway-access: "true"

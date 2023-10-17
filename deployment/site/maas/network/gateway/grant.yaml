@@ -13,22 +13,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: cert-manager
-components:
-  - ../../../../global/certmanager/clusterissuer
-resources:
-  - ../../../../global/certmanager
-  - certificate.yaml
-  - namespace.yaml
-patches:
-  - path: patch/certmanager.yaml
-  - path: patch/clusterissuer.yaml
-  - patch: |-
-      - op: replace
-        path: /metadata/name
-        value: default-cluster-issuer
-    target:
-      kind: HelmRelease
-      name: cluster-issuer
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-infra-gateways-to-ref-secrets
+  namespace: cert-manager
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: infra
+  to:
+    - group: ""
+      kind: Secret

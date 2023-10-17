@@ -112,7 +112,7 @@ spec:
         image: quay.io/ceph/ceph:v18.2.0
       dashboard:
         enabled: true
-        ssl: false # FIXME: dashboard ssl
+        ssl: false
       network:
         connections:
           encryption:
@@ -213,6 +213,7 @@ spec:
             instances: 1
             port: 80
             securePort: 443
+            sslCertificateRef: rook-ceph-dashboard-cert
         storageClass:
           enabled: true
           name: ceph-bucket

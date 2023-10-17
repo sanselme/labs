@@ -13,22 +13,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 ---
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: cert-manager
-components:
-  - ../../../../global/certmanager/clusterissuer
-resources:
-  - ../../../../global/certmanager
-  - certificate.yaml
-  - namespace.yaml
-patches:
-  - path: patch/certmanager.yaml
-  - path: patch/clusterissuer.yaml
-  - patch: |-
-      - op: replace
-        path: /metadata/name
-        value: default-cluster-issuer
-    target:
-      kind: HelmRelease
-      name: cluster-issuer
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rook-ceph-dashboard-cert
+  namespace: rook-ceph
+spec:
+  secretName: rook-ceph-dashboard-tls
+  commonName: rook-ceph-mgr-dashboard.rook-ceph.svc.cluster.local
+  dnsNames:
+    - rook-ceph-mgr-dashboard
+    - rook-ceph-mgr-dashboard.rook-ceph
+    - rook-ceph-mgr-dashboard.rook-ceph.svc
+    - rook-ceph-mgr-dashboard.rook-ceph.svc.cluster.local
+  issuerRef:
+    kind: ClusterIssuer
+    name: default-ca-issuer

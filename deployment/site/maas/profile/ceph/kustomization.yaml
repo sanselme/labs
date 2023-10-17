@@ -22,6 +22,7 @@ resources:
   - ../../../../global/csi/addons
   - ../../../../global/csi/ceph/rook
   - ../../../../global/csi/snapshotter
+  - certificate.yaml
   - namespace.yaml
 patches:
   - path: patch/cluster.yaml

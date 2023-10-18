@@ -15,23 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-LO_ADDR=""
-MGMT_ADDR_CIDR=""
+: "${FILE_NAME:=$1}"
+: "${FILE:=$2}"
+: "${VAULT:=$3}"
 
-AS_NUMBER=""
-BGP_PEER_INT=""
+# check required variables
+[[ -z ${FILE_NAME} ]] && echo "File name is required!" && exit 1
+[[ -z ${FILE} ]] && echo "File is required!" && exit 1
 
-CURRENT_DIR="$(dirname "${0}")"
-source "${CURRENT_DIR}/common.sh"
+# check optional variables
+[[ -z ${VAULT} ]] && VAULT="Developer"
 
-# configure mp-bgp
-net add bgp autonomous-system "${AS_NUMBER}"
-net add bgp router-id "${LO_ADDR}"
-net add bgp bestpath as-path multipath-relax
-net add bgp neighbor fabric peer-group
-net add bgp neighbor fabric remote-as external
-net add bgp neighbor fabric capability extended-nexthop
-net add bgp neighbor fabric timers 10 30
-net add bgp neighbor "${BGP_PEER_INT}" interface peer-group fabric
-net add bgp ipv4 unicast network "${LO_ADDR}/32"
-net add bgp l2vpn evpn neighbor fabric activate
+# verify vault exist in list
+VAULT_LIST="$(op vault list --format=json | jq -r '.[].name')"
+if [[ ! ${VAULT_LIST} =~ ${VAULT} ]]; then
+  echo "Vault ${VAULT} not found"
+  exit 1
+fi
+
+# get file
+op document get "${FILE_NAME}" \
+  --force \
+  --out-file "${FILE}" \
+  --vault "${VAULT}"

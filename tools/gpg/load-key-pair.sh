@@ -18,7 +18,7 @@ set -e
 source scripts/load-env.sh
 
 # get private key from onepassword
-scripts/onepassword/op-get-privkey.sh "${SEC_KEY}" "${SEC_KEY_OP_TITLE}" .sops.asc
+scripts/onepassword/op-get-file.sh "${SEC_KEY}" "${SEC_KEY_OP_TITLE}" .sops.asc
 
 # import private key
 gpg --armor --import --allow-secret-key-import "${SEC_KEY}"

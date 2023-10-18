@@ -1,5 +1,5 @@
 # TODO: move to labsonline/cicd
-# and add to review (cicd / review / scan)
+# and add to gates (cicd / gates / guardian)
 name: Scan
 
 on:

@@ -15,30 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-: "${DOCUMENT_NAME:=$1}"
-: "${OUT_FILE:=$2}"
+: "${ITEM_NAME:=$1}"
+: "${FIELDS:=$2}"
 : "${VAULT:=$3}"
 
 # check required variables
-[[ -z ${DOCUMENT_NAME} ]] && echo "Document name is required!" && exit 1
-[[ -z ${OUT_FILE} ]] && echo "Output file is required!" && exit 1
+[[ -z ${ITEM_NAME} ]] && echo "Item name is required!" && exit 1
+
+# check optional variables
 [[ -z ${VAULT} ]] && VAULT="Developer"
 
-# list vaults
-op vault list
-
 # verify vault exist in list
-VAULT_LIST="$(op vault list --format=json | jq -r '.[].name')"
+VAULT_LIST="$(op vault list --format json | jq -r '.[].name')"
 if [[ ! ${VAULT_LIST} =~ ${VAULT} ]]; then
   echo "Vault ${VAULT} not found"
   exit 1
 fi
 
-# list documents
-op document list --vault "${VAULT}"
-
-# get sops privkey (force overwrite)
-op document get "${DOCUMENT_NAME}" \
-  --force \
-  --out-file "${OUT_FILE}" \
+# get item (force overwrite)
+op item get "${ITEM_NAME}" \
+  --fields "${FIELDS}" \
+  --format json \
   --vault "${VAULT}"

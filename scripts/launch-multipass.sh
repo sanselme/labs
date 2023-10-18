@@ -35,6 +35,11 @@ Example:
 : "${DISK:=32}"
 : "${MEM:=8}"
 
+# decrypt cloud-init if provided
+[[ -f ${CLOUDINIT} ]] && {
+  ./tools/sops/decrypt.sh "${CLOUDINIT}"
+}
+
 # launch multipass
 multipass launch \
   --cloud-init "${CLOUDINIT}" \

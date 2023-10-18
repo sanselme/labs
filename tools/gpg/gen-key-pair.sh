@@ -36,7 +36,7 @@ export PGP
 cat <<EOF | envsubst | tee "${SOPS_CONFIG}"
 creation_rules:
   - path_regex: .*.yaml
-    encrypted_regex: ^(data|stringData|password|token)$
+    encrypted_regex: ^(ca_certs|data|password|ssh_authorized_keys|stringData|token|write_files)$
     pgp: ${PGP}
 EOF
 

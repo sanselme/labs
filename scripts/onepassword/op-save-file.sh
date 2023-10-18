@@ -15,36 +15,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-: "${IN_FILE:=$1}"
-
-: "${DOCUMENT_TITLE:=$2}"
-: "${DOCUMENT_NAME:=$3}"
+: "${FILE:=$1}"
+: "${TITLE:=$2}"
+: "${FILE_NAME:=$3}"
 : "${VAULT:=$4}"
 
 # check required variables
-[[ -z ${IN_FILE} ]] && echo "Input file is required!" && exit 1
-
-[[ -z ${DOCUMENT_TITLE} ]] && echo "Document title is required!" && exit 1
-[[ -z ${VAULT} ]] && VAULT="Developer"
+[[ -z ${FILE} ]] && echo "Input file is required!" && exit 1
+[[ -z ${TITLE} ]] && echo "Title is required!" && exit 1
 
 # check optional variables
-[[ -z ${DOCUMENT_NAME} ]] && DOCUMENT_NAME="${DOCUMENT_TITLE}"
-
-# list vaults
-op vault list
+[[ -z ${VAULT} ]] && VAULT="Developer"
+[[ -z ${FILE_NAME} ]] && FILE_NAME="${TITLE}"
 
 # verify vault exist in list
-VAULT_LIST="$(op vault list --format=json | jq -r '.[].name')"
+VAULT_LIST="$(op vault list --format json | jq -r '.[].name')"
 if [[ ! ${VAULT_LIST} =~ ${VAULT} ]]; then
   echo "Vault ${VAULT} not found"
   exit 1
 fi
 
-# list documents
-op document list --vault "${VAULT}"
-
-# get sops privkey (force overwrite)
-op document create "${IN_FILE}" \
-  --file-name "${DOCUMENT_NAME}" \
-  --title "${DOCUMENT_TITLE}" \
-  --vault "${VAULT}"
+# save file
+op document create "${FILE}" \
+  --file-name "${FILE_NAME}" \
+  --title "${TITLE}" \
+  --vault "${VAULT}" \
+  "${@}"

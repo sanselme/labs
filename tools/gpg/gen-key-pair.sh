@@ -47,7 +47,7 @@ gpg  --armor --export "${PGP}" >"${PUB_KEY}"
 gpg --armor --export-secret-keys "${PGP}" >"${SEC_KEY}"
 
 # save private key to onepassword
-scripts/onepassword/op-save-privkey.sh "${SEC_KEY}" "${SEC_KEY_OP_TITLE}" .sops.asc
+scripts/onepassword/op-save-file.sh "${SEC_KEY}" "${SEC_KEY_OP_TITLE}" .sops.asc
 
 # remove gpg keys
 gpg --delete-secret-keys "${PGP}"

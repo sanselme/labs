@@ -14,14 +14,27 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
-set -e
-source scripts/load-env.sh
 
-# get private key from onepassword
-scripts/onepassword/op-get-file.sh "${SEC_KEY}" "${SEC_KEY_OP_TITLE}" .sops.asc
+: "${FILE_NAME:=$1}"
+: "${FILE:=$2}"
+: "${VAULT:=$3}"
 
-# import private key
-gpg --armor --import --allow-secret-key-import "${SEC_KEY}"
+# check required variables
+[[ -z ${FILE_NAME} ]] && echo "File name is required!" && exit 1
+[[ -z ${FILE} ]] && echo "File is required!" && exit 1
 
-# import public key
-gpg --armor --import "${PUB_KEY}"
+# check optional variables
+[[ -z ${VAULT} ]] && VAULT="Developer"
+
+# verify vault exist in list
+VAULT_LIST="$(op vault list --format=json | jq -r '.[].name')"
+if [[ ! ${VAULT_LIST} =~ ${VAULT} ]]; then
+  echo "Vault ${VAULT} not found"
+  exit 1
+fi
+
+# get file
+op document get "${FILE_NAME}" \
+  --force \
+  --out-file "${FILE}" \
+  --vault "${VAULT}"

@@ -158,7 +158,7 @@ else
     yq -i '.write_files[5].content = load_str("./scripts/install-kubernetes.sh")' "${CLOUDINIT}"
     yq -i '.runcmd += "/opt/install-kubernetes.sh"' "${CLOUDINIT}"
   }
-fi
 
-# encrypt
-./tools/sops/encrypt.sh "${CLOUDINIT}"
+  # encrypt
+  ./tools/sops/encrypt.sh "${CLOUDINIT}"
+fi

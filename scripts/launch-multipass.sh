@@ -15,23 +15,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-LO_ADDR=""
-MGMT_ADDR_CIDR=""
+NAME="${1}"
+CLOUDINIT="${2}"
+NET="${3}"
+[[ -z ${NAME} || -z ${CLOUDINIT} ]] && {
+  echo """
+Usage: $0 <name> <cloud-init> [net]
+  name:       name of the instance
+  cloud-init: path to cloud-init file
+  net:        network interface to use (default: none)
 
-AS_NUMBER=""
-BGP_PEER_INT=""
+Example:
+  $0 vision ~/Downloads/cloud-init.yaml
+"""
+  exit 1
+}
 
-CURRENT_DIR="$(dirname "${0}")"
-source "${CURRENT_DIR}/common.sh"
+: "${CPUS:=2}"
+: "${DISK:=32}"
+: "${MEM:=8}"
 
-# configure mp-bgp
-net add bgp autonomous-system "${AS_NUMBER}"
-net add bgp router-id "${LO_ADDR}"
-net add bgp bestpath as-path multipath-relax
-net add bgp neighbor fabric peer-group
-net add bgp neighbor fabric remote-as external
-net add bgp neighbor fabric capability extended-nexthop
-net add bgp neighbor fabric timers 10 30
-net add bgp neighbor "${BGP_PEER_INT}" interface peer-group fabric
-net add bgp ipv4 unicast network "${LO_ADDR}/32"
-net add bgp l2vpn evpn neighbor fabric activate
+# launch multipass
+multipass launch \
+  --cloud-init ~/Downloads/cloud-init.yaml \
+  --name "${NAME}" \
+  --network "${NET}" \
+  -c "${CPUS}" \
+  -d "${DISK}g" \
+  -m "${MEM}g"

@@ -1,1 +1,6 @@
+*.pfx
+*.asc
+*.p7r
+*.csr
+*.pem
 !*.sops.pub.asc

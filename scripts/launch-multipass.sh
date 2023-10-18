@@ -37,7 +37,7 @@ Example:
 
 # launch multipass
 multipass launch \
-  --cloud-init ~/Downloads/cloud-init.yaml \
+  --cloud-init "${CLOUDINIT}" \
   --name "${NAME}" \
   --network "${NET}" \
   -c "${CPUS}" \

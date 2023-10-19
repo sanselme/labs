@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
-set -e
+# set -e
 
 export CLUSTERCTL_VERSION=1.5.2
 export COSIGN_VERSION=2.2.0
@@ -32,6 +32,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 export PATH="${KREW_ROOT}/bin${PATH:+:${PATH}}"
 
+# Install packages
 apt-get update -qq &&
   apt-get install -y --no-install-recommends \
     apt-transport-https \
@@ -57,22 +58,18 @@ apt-get update -qq &&
     vim \
     zip
 
+# Configure external repositories
 curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg |
   echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" |
   tee /etc/apt/sources.list.d/hashicorp.list &&
-  curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg |
-  echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" |
-    tee /etc/apt/sources.list.d/kubernetes.list &&
   curl https://baltocdn.com/helm/signing.asc | gpg --dearmor -o /usr/share/keyrings/helm.gpg |
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" |
     tee /etc/apt/sources.list.d/helm-stable-debian.list
 
+# Install packages from external repositories
 apt-get update -qq &&
   apt-get install -y --no-install-recommends \
     helm \
-    kubeadm \
-    kubectl \
-    kubelet \
     vault &&
   # Prevents journald from reading kernel messages from /dev/kmsg
   echo "ReadKMsg=no" >>/etc/systemd/journald.conf &&
@@ -88,6 +85,7 @@ apt-get update -qq &&
   systemctl set-default multi-user.target
 
 # TODO: Verify checksums
+# Install binaries
 curl -fsSLo /usr/local/bin/clusterctl "https://github.com/kubernetes-sigs/cluster-api/releases/download/v${CLUSTERCTL_VERSION}/clusterctl-linux-$(dpkg --print-architecture)" &&
   chmod +x /usr/local/bin/clusterctl &&
   curl -fsSLo /usr/local/bin/cosign "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-$(dpkg --print-architecture)" &&
@@ -99,6 +97,7 @@ curl -fsSLo /usr/local/bin/clusterctl "https://github.com/kubernetes-sigs/cluste
   curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/download/v${KREW_VERSION}/${KREW}.tar.gz" |
   tar xzf "${KREW}.tar.gz" -C "/tmp/"
 
+# Install krew plugins
 "/tmp/${KREW}" install krew &&
   kubectl krew install \
     ca-cert \

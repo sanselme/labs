@@ -16,20 +16,19 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 set -e
 
-# load environment variables
-source ./scripts/load-env.sh
+# Housekeeping
+apt-get clean -y &&
+  rm -rf \
+    ./*.tar.gz \
+    /var/cache/debconf/* \
+    /var/lib/apt/lists/* \
+    /var/log/* \
+    /tmp/* \
+    /var/tmp/* \
+    /usr/share/doc/* \
+    /usr/share/man/* \
+    /usr/share/local/*
 
-# configure machine
-./scripts/setup-machine.sh
-
-# configure loopdev
-./scripts/setup-ceph-loopdev.sh
-
-# run clos
-./tools/bottle/clos.sh
-
-# run inception
-./tools/bottle/inception.sh
-
-# FIXME: bootstrap
-# ./tools/bootstrap.sh
+# quiet sudo for the admin user
+umask 0337
+echo 'Defaults:admin !pam_session, !syslog' >/etc/sudoers.d/99-admin-no-log

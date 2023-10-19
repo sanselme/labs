@@ -1,0 +1,24 @@
+[
+  {
+    "critical": {
+      "identity": {
+        "docker-reference": "ghcr.io/sanselme/labs/inception"
+      },
+      "image": {
+        "docker-manifest-digest": "sha256:cb59751e8dd48f265fc6258fa6b0d84c7861e5f0142c5aed7f807a8912f493bd"
+      },
+      "type": "cosign container image signature"
+    },
+    "optional": {
+      "Bundle": {
+        "SignedEntryTimestamp": "MEUCIB4+xmNITgDIAqCC+HHMbLm30qprz5MEaC8pNTRV8UlsAiEArCXB/Ks6I+VfuwMeR1nzTfpommP+k026qKX39wiAP1o=",
+        "Payload": {
+          "body": "eyJhcGlWZXJzaW9uIjoiMC4wLjEiLCJraW5kIjoiaGFzaGVkcmVrb3JkIiwic3BlYyI6eyJkYXRhIjp7Imhhc2giOnsiYWxnb3JpdGhtIjoic2hhMjU2IiwidmFsdWUiOiI2MGIxZGYxOTQ0YWQ1MmFjYjNmZjhiNGU3NmFjMzRhMzRhZTU2Mjc3M2RmMDBlOWM0YzlhOTE3N2I2Nzg1ZjU2In19LCJzaWduYXR1cmUiOnsiY29udGVudCI6Ik1FVUNJUUN5UG0xc0tuNDAwVFRhanBPVC9qSERNaDZjK0lwN3I2ODVTbi9naTJ1Z2tnSWdTcXBSV1lBOXByeTBsQ0k0NmluTXZXbEhieFNoekJoMTlOR2dySy9rTlpzPSIsInB1YmxpY0tleSI6eyJjb250ZW50IjoiTFMwdExTMUNSVWRKVGlCUVZVSk1TVU1nUzBWWkxTMHRMUzBLVFVacmQwVjNXVWhMYjFwSmVtb3dRMEZSV1VsTGIxcEplbW93UkVGUlkwUlJaMEZGYlZkWmRsWkRhV0ZrYkVwNGVTc3hjRFJHZFVGT1JFcEdiR0VyVEFwamNsTlJVVWhZYkhNME1rRjVTREpPUVd4Tk1UaFFhbEZsVmtWaFlqUkdNR0pGUm5wbUwyMUJhbWxhZFRGS1ptNTFSa1Y0VTBaSE1HeG5QVDBLTFMwdExTMUZUa1FnVUZWQ1RFbERJRXRGV1MwdExTMHRDZz09In19fX0=",
+          "integratedTime": 1697694651,
+          "logIndex": 44038644,
+          "logID": "c0d23d6ad406973f9559f3ba2d1ca01f84147d8ffc5b8445c224f98b9591801d"
+        }
+      }
+    }
+  }
+]

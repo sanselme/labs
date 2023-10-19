@@ -25,12 +25,14 @@ export K0S_CONFIG_FILE="hack/kubernetes/k0s.yaml"
 export K0SCTL_CONFIG_FILE="hack/kubernetes/cluster.yaml"
 export SSH_PUB_KEY_FILE="${HOME}/.ssh/id_ed25519.pub"
 
+export COSIGN_KEY_OP_TITLE="${1:-'cosign-sandbox'}}"
+export COSIGN_KEY="${2:-build/.cosign.key}"
 export KEY_COMMENT="test key for sops"
 export KEY_NAME="sandbox"
 export PUB_KEY="${1:-build/.sops.pub.asc}"
+export SEC_KEY_OP_TITLE="${1:-'sops-sandbox'}}"
 export SEC_KEY="${2:-build/.sops.asc}"
 export SOPS_CONFIG="${3:-build/.sops.yaml}"
-export SEC_KEY_OP_TITLE="${1:-'sops - sandbox'}}"
 
 export BITNAMI="oci://registry-1.docker.io/bitnamicharts"
 

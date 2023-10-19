@@ -22,6 +22,7 @@ source ./scripts/load-env.sh
 # configure machine
 ./scripts/setup-machine.sh
 
+<<<<<<< HEAD
 # install package
 snap install lxd microceph
 
@@ -41,3 +42,16 @@ ceph fs subvolume getpath cephfs
 lxd init
 
 # TODO: add lxd to MAAS
+=======
+# configure loopdev
+./scripts/setup-ceph-loopdev.sh
+
+# run clos
+./tools/bottle/clos.sh
+
+# run inception
+./tools/bottle/inception.sh
+
+# FIXME: bootstrap
+# ./tools/bootstrap.sh
+>>>>>>> fa8a79f (feat: Update docker images)

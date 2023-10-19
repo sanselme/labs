@@ -1,7 +1,9 @@
 enable=all
 source-path=SCRIPTDIR
+disable=SC2002
 disable=SC2143
 disable=SC2154
+disable=SC2216
 disable=SC2312
 
 # If you're having issues with shellcheck following source, disable the errors via:

@@ -14,31 +14,41 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 set -e
 
-: "${DOCKERFILE:=build/pkg/img/Dockerfile}"
-: "${IMG:=ghcr.io/sanselme/labs/inception}"
+IMAGES=(
+  bottle
+  clos
+  inception
+)
+
+: "${DOCKERFILE_ROOT:=build/pkg/img}"
 : "${PLATFORM:=linux/amd64,linux/arm64}"
+: "${REPO:=ghcr.io/sanselme/labs}"
 : "${TAG:=v0.1.0}"
 
 # build and push image
-docker buildx build \
-  --file "${DOCKERFILE}" \
-  --label "org.opencontainers.image.authors=Schubert Anselme <schubert@anselm.es>" \
-  --label "org.opencontainers.image.created=$(date)" \
-  --label "org.opencontainers.image.description=" \
-  --label "org.opencontainers.image.documentation=https://github.com/sanselme/labs/blob/main/README.md" \
-  --label "org.opencontainers.image.licenses=GPL-3.0-or-later" \
-  --label "org.opencontainers.image.source=https://github.com/sanselme/labs" \
-  --label "org.opencontainers.image.title=Inception" \
-  --label "org.opencontainers.image.url=https://github.com/users/sanselme/packages/container/package/labs%2Finception" \
-  --label "org.opencontainers.image.version=${TAG}" \
-  --platform "${PLATFORM}" \
-  --push \
-  --tag "${IMG}":"${TAG}" \
-  --tag "${IMG}":latest \
-  .
+for image in "${IMAGES[@]}"; do
+  DOCKERFILE="${DOCKERFILE_ROOT}/${image}/Dockerfile"
+  IMG="${REPO}/${image}"
 
-# TODO: sign image
-# ./scripts/cosign/sign.sh "${IMG}":"${TAG}"
+  docker buildx build \
+    --file "${DOCKERFILE}" \
+    --label "org.opencontainers.image.authors=Schubert Anselme <schubert@anselm.es>" \
+    --label "org.opencontainers.image.created=$(date)" \
+    --label "org.opencontainers.image.description=${image}" \
+    --label "org.opencontainers.image.documentation=https://github.com/sanselme/labs/blob/main/README.md" \
+    --label "org.opencontainers.image.licenses=GPL-3.0-or-later" \
+    --label "org.opencontainers.image.source=https://github.com/sanselme/labs" \
+    --label "org.opencontainers.image.title=${image}" \
+    --label "org.opencontainers.image.url=https://github.com/users/sanselme/packages/container/package/labs%2F${image}" \
+    --label "org.opencontainers.image.version=${TAG}" \
+    --platform "${PLATFORM}" \
+    --push \
+    --tag "${IMG}":"${TAG}" \
+    --tag "${IMG}":latest \
+    .
+
+  # sign image
+  ./tools/cosign/sign.sh "${IMG}":"${TAG}"
+done

@@ -17,7 +17,6 @@
 set -e
 
 IMAGES=(
-  bottle
   clos
   inception
 )

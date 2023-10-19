@@ -37,13 +37,20 @@ apt-get update -qq &&
   apt-get install -y --no-install-recommends \
     apt-transport-https \
     ca-certificates \
+    cephfs-shell \
     curl \
     dbus \
+    fdisk \
+    gdisk \
     git \
     gnupg \
     ipvsadm \
     jq \
+    libcephfs2 \
     libsystemd0 \
+    nfs-ganesha \
+    nfs-ganesha-ceph \
+    parted \
     patch \
     python3-heatclient \
     python3-openstackclient \

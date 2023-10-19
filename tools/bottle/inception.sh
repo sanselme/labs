@@ -29,38 +29,12 @@ set -e
 # Configure Vault
 systemctl enable vault.service
 
-# FIXME: unseal
-# /src/labs/tools/vault/unseal.sh
-
-# vault auth list
-# vault auth enable approle
-# vault secrets enable -path "${SECRETS_MOUNT}" kv-v2
-
-# cat <<EOF >"${POLICY_FILE}"
-# path "${SECRETS_MOUNT}/metadata/${SECRETS_PATH}/" {
-# 	capabilities = ["list"]
-# }
-
-# path "${SECRETS_MOUNT}/metadata/${SECRETS_PATH}/*" {
-# 	capabilities = ["read", "update", "delete", "list"]
-# }
-
-# path "${SECRETS_MOUNT}/data/${SECRETS_PATH}/*" {
-# 	capabilities = ["read", "create", "update", "delete"]
-# }
-# EOF
-
-# vault policy write "${MAAS_POLICY}" "${POLICY_FILE}"
-# vault write "auth/approle/role/${ROLE_NAME}" policies="${MAAS_POLICY}" token_ttl=5m
-# vault read "auth/approle/role/${ROLE_NAME}/role-id"
-# vault write -wrap-ttl=5m "auth/approle/role/${ROLE_NAME}/secret-id"
-
 # Install MAAS
 apt-add-repository ppa:maas/3.4-next
 apt update
 apt-get -y install maas
 
-# FIXME: Configure MAAS
+# Configure MAAS
 systemctl disable systemd-timesyncd
 maas createadmin --username="${PROFILE}" --email="${EMAIL_ADDRESS}"
 maas status
@@ -68,18 +42,9 @@ maas init region
 maas apikey --username="${PROFILE}" >api-key-file
 maas login "${PROFILE}" "${MAAS_URL}" <api-key-file
 maas "${PROFILE}" maas set-config name=upstream_dns value="1.1.1.1 9.9.9.9"
-# maas "${PROFILE}" sshkeys create key="${SSH_KEY}"
 maas "${PROFILE}" boot-source-selections create 1 os="ubuntu" release="trusty" arches="amd64" subarches="*" labels="*"
 maas "${PROFILE}" boot-resources read | jq -r '.[] | "\(.name)\t\(.architecture)"'
 maas admin boot-resources import
 maas "${PROFILE}" subnet read "${SUBNET_CIDR}" | grep fabric_id
 maas "${PROFILE}" rack-controllers read | grep hostname | cut -d '"' -f 4
-# maas "${PROFILE}" ipranges create type=dynamic start_ip="${START_IP}" end_ip="${END_IP}"
 maas "${PROFILE}" vlan update "${FABRIC_ID}" untagged dhcp_on=True primary_rack="${RACK_CONTR_HOSTNAME}"
-
-# TODO: Configure MAAS with tls
-# maas config-tls enable tls.key tls.pem --port 5443
-
-# TODO: Configure MAAS with Vault
-# maas config-vault configure "${URL}" "${APPROLE_ID}" "${WRAPPED_TOKEN}" "${SECRETS_PATH}" --mount "${SECRETS_MOUNT}"
-# maas config-vault migrate

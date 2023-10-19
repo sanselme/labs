@@ -2,6 +2,7 @@ enable=all
 source-path=SCRIPTDIR
 disable=SC1089
 disable=SC2002
+disable=SC2003
 disable=SC2143
 disable=SC2154
 disable=SC2216

@@ -1,0 +1,125 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+users:
+  - default
+  - name: administrator
+    gecos: Administrator
+    lock_passwd: true
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys: []
+ca_certs:
+  remove-defaults: false
+  trusted: []
+packages:
+  - apparmor
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - libcephfs2
+  - libseccomp2
+  - python3-rbd
+write_files:
+  - path: /usr/local/lib/systemd/system/byoh-hostagent-watcher.path
+    permissions: 644
+    owner: root
+    content: |
+      [Path]
+      Unit=byoh-hostagent-watcher.service
+      PathChanged=/etc/byoh/bootstrap-kubeconfig.conf
+      TimeoutStopSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+  - path: /usr/local/lib/systemd/system/byoh-hostagent-watcher.service
+    permissions: 644
+    owner: root
+    content: |
+      [Unit]
+      Description=host-agent restarter
+      DefaultDependencies=no
+      Wants=network.target
+      After=network.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/bin/systemctl restart byoh-hostagent.service
+      TimeoutStopSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+  - path: /usr/local/lib/systemd/system/byoh-hostagent.service
+    permissions: 644
+    owner: root
+    content: |
+      [Unit]
+      Description=BYOH Host Agent
+      Documentation=https://github.com/vmware-tanzu/cluster-api-provider-bringyourownhost/
+      Requires=network-online.target
+      After=network-online.target
+      ConditionPathExists=/etc/byoh/bootstrap-kubeconfig.conf
+
+      [Service]
+      Restart=always
+      RestartSec=10s
+      KillMode=mixed
+      Environment="KUBECONFIG=/etc/byoh/bootstrap-kubeconfig.conf"
+      Environment="LOGFILE=/var/log/byoh-hostagent.log"
+      ExecStart=/bin/sh -c \
+          "exec /usr/local/bin/byoh-hostagent \
+            --skip-install \
+            --bootstrap-kubeconfig $KUBECONFIG 2>&1 | tee -a $LOGFILE"
+
+      [Install]
+      WantedBy=multi-user.target
+  - path: /etc/byoh/bootstrap-kubeconfig.conf
+    permissions: 644
+    owner: root
+    content: |
+      apiVersion: v1
+      kind: Config
+      preferences: {}
+  - path: /opt/setup-machine.sh
+    permissions: 755
+    owner: root
+    content: |
+      #!/bin/bash
+
+      # Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+      #
+      # This program is free software: you can redistribute it and/or modify
+      # it under the terms of the GNU General Public License as published by
+      # the Free Software Foundation, either version 3 of the License, or
+      # (at your option) any later version.
+      #
+      # This program is distributed in the hope that it will be useful,
+      # but WITHOUT ANY WARRANTY; without even the implied warranty of
+      # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+      # GNU General Public License for more details.
+      #
+      # You should have received a copy of the GNU General Public License
+      # along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+      : "${LOCALE:="C.UTF-8"}"
+      : "${TIMEZONE:="America/Toronto"}"
+
+      # disable swap
+      swapoff -a && sed -ri '/\sswap\s/s/^#?/#/' /etc/fstab
+
+      # set locale
+      localectl set-locale LANG="${LOCALE}"
+
+      # set timezone
+      timedatectl set-ntp true
+      timedatectl set-timezone "${TIMEZONE}"
+
+      # disable firewall
+      if command -v ufw >>/dev/null; then
+        ufw disable
+      fi
+runcmd:
+  - /opt/setup-machine.sh
+bootcmd:
+  - echo "Boot Completed!!!"

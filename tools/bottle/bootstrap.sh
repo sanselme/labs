@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,20 +14,30 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
+set -e
 
-ARG BASE_IMAGE=ubuntu:22.04
-FROM ${BASE_IMAGE}
+# load environment variables
+source ./scripts/load-env.sh
 
-COPY . /src/labs/
-RUN /src/labs/scripts/setup-machine.sh && \
-  /src/labs/tools/bottle/clos.sh && \
-  /src/labs/tools/bottle/inception.sh && \
-  /src/labs/tools/bottle/cleanup.sh
+# configure machine
+./scripts/setup-machine.sh
 
-# Make use of stopsignal (instead of sigterm) to stop systemd containers.
-STOPSIGNAL SIGRTMIN+3
+# install package
+snap install lxd microceph
 
-EXPOSE 80 443 5420 5443 6443 8200
+# bootstrap microceph
+microceph init
 
-# Initalize systemd
-CMD ["/bin/bash", "-c", "exec /sbin/init --log-target=console 3>&1"]
+# configure microceph
+ceph mgr module enable test_orchestrator
+ceph orch set backend test_orchestrator
+ceph osd pool create cephfs_data
+ceph osd pool create cephfs_metadata
+ceph fs new cephfs cephfs_metadata cephfs_data
+ceph fs subvolume create cephfs microceph
+ceph fs subvolume getpath cephfs
+
+# init lxd
+lxd init
+
+# TODO: add lxd to MAAS

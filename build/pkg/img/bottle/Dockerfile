@@ -16,6 +16,16 @@
 ARG BASE_IMAGE=ubuntu:22.04
 FROM ${BASE_IMAGE}
 
-# Configure
-RUN /src/labs/tools/vault/unseal.sh && \
-  /src/labs/tools/bottle/inception.sh
+COPY . /src/labs/
+RUN /src/labs/scripts/setup-machine.sh && \
+  /src/labs/tools/bottle/clos.sh && \
+  /src/labs/tools/bottle/inception.sh && \
+  /src/labs/tools/bottle/cleanup.sh
+
+# Make use of stopsignal (instead of sigterm) to stop systemd containers.
+STOPSIGNAL SIGRTMIN+3
+
+EXPOSE 80 443 5420 5443 6443 8200
+
+# Initalize systemd
+CMD ["/bin/bash", "-c", "exec /sbin/init --log-target=console 3>&1"]

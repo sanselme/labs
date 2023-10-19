@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
-set -e
+# set -e
 
 export CLUSTERCTL_VERSION=1.5.2
 export COSIGN_VERSION=2.2.0

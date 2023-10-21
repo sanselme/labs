@@ -29,9 +29,6 @@ Name-Comment: "${KEY_COMMENT}"
 Name-Real: "${KEY_NAME}"
 EOF
 
-PGP="$(gpg --list-keys "${KEY_NAME}" | head -n +2 | tail -n 1 | tr -d ' ')"
-export PGP
-
 # generate sops config
 cat <<EOF | envsubst | tee "${SOPS_CONFIG}"
 creation_rules:

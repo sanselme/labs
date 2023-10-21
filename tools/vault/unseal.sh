@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 set -e
-source scripts/load-env.sh
+
+export VAULT_ADDR=https://127.0.0.1:8200
+export VAULT_SKIP_VERIFY=true
 
 # init vault
 initialize() {

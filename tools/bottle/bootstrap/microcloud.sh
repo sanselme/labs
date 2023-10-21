@@ -29,15 +29,28 @@ snap install lxd microceph
 microceph init
 
 # configure microceph
-ceph mgr module enable test_orchestrator
-ceph orch set backend test_orchestrator
 ceph osd pool create cephfs_data
 ceph osd pool create cephfs_metadata
 ceph fs new cephfs cephfs_metadata cephfs_data
-ceph fs subvolume create cephfs microceph
-ceph fs subvolume getpath cephfs
+# ceph fs subvolumegroup create cephfs lxd
+# ceph fs subvolumegroup getpath cephfs lxd
 
-# init lxd
-lxd init
+ceph mgr module enable test_orchestrator
+ceph orch set backend test_orchestrator
+
+ceph mgr module enable dashboard
+ceph dashboard set-ssl-certificate -i tls.crt
+ceph dashboard set-ssl-certificate-key -i tls.key
+ceph config set mgr mgr/dashboard/ssl_server_port 8443
+ceph dashboard ac-user-create admin -i passwd administrator
+ceph dashboard set-rgw-credentials
+
+# TODO: enable ssl for ceph rgw
+
+# Otional: enable lxd
+# lxd init
 
 # add lxd to MAAS
+# TODO: add lxd to MAAS
+
+# Optional: enable sunbeam

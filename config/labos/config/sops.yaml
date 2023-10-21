@@ -1,0 +1,16 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: ConfigDefinition
+metadata:
+  name: sops
+  namespace: tenant
+spec:
+  pubkey: null
+  privkey:
+    path: build/.sops.asc
+  config:
+    path: build/.sops.yaml
+  providerRef:
+    name: onepassword
+    vault: Developer
+status: {}

@@ -18,11 +18,9 @@ kind: Kustomization
 namespace: sre
 resources:
   - ../../../global/sre/aqua
-  - ../../../global/sre/flux
   - ../../../global/sre/source
   - namespace.yaml
   # - ../../../global/sre/lens
   # - ../../../global/sre/litmus
 patches:
-  - path: patch/flux.yaml
   - path: patch/trivy.yaml

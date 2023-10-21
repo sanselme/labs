@@ -1,0 +1,10 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: ProviderDefinition
+metadata:
+  name: byoh
+  namespace: providers
+spec:
+  type: ClusterAPI
+  config: {}
+status: {}

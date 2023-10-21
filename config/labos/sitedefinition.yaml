@@ -1,0 +1,13 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: SiteDefinition
+metadata:
+  name: sandbox
+  namespace: tenant
+spec:
+  profile: default
+  config: {}
+  sources:
+    - name: github
+    - name: codecloud
+status: {}

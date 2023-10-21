@@ -1,0 +1,10 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: DeviceDefinition
+metadata:
+  name: processor
+  namespace: tenant
+spec:
+  type: Processor
+  config: {}
+status: {}

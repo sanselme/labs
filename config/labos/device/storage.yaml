@@ -1,0 +1,10 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: DeviceDefinition
+metadata:
+  name: storage
+  namespace: tenant
+spec:
+  type: Storage
+  config: {}
+status: {}

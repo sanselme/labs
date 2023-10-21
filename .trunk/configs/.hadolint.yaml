@@ -1,0 +1,9 @@
+# Following source doesn't work in most setups
+ignored:
+  - DL3006
+  - DL3008
+  - DL3009
+  - DL4006
+  - SC1083
+  - SC1091
+  - SC2216

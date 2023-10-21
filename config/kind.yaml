@@ -8,7 +8,7 @@ networking:
   ipFamily: ipv4
   kubeProxyMode: ipvs
 featureGates:
-  UserNamespacesStatelessPodsSupport: true
+  UserNamespacesSupport: true
 nodes:
   - role: control-plane
     labels: {}

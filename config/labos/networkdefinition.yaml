@@ -1,0 +1,31 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: MachineDefinition
+metadata:
+  name: network
+  namespace: infra
+spec:
+  evpn:
+    loopback: 10.1.0.64
+    management: 10.0.0.64/24
+    anycast:
+      address:
+        ip: 192.168.11.1
+        mac: 00:00:00:00:00:00
+    l2:
+      vlan: 101
+      vni: 100101
+      vrf: fabric
+      interfaces: []
+    l3:
+      vlan: 3000
+      vni: 103000
+      vrf: fabric
+    bgp:
+      as: 65000
+      peer:
+        interfaces: []
+    vrf:
+      - name: blue
+      - name: fabric
+      - name: red

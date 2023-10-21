@@ -1,0 +1,91 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: Cloud
+metadata:
+  name: sandbox
+  namespace: tenant
+spec:
+  config:
+    ssh:
+      providerRef:
+        name: onepassword
+        path: Developer/id_rsa
+    gpg:
+      providerRef:
+        name: onepassword
+        path: Developer/gpg-sandbox
+    cosign:
+      providerRef:
+        name: onepassword
+        path: Developer/cosign-sandbox
+    sops:
+      providerRef:
+        name: onepassword
+        path: Developer/sops-sandbox
+  cores:
+    - name: sandbox
+      machineRef:
+        name: sandbox
+  clusters:
+    - name: sandbox
+      kubeconfig: build/site/sandbox/kubeconfig.yaml
+      cores:
+        - name: sandbox
+    - name: kind
+      kubeconfig: build/site/kind/kubeconfig.yaml
+      clusterconfig: hack/kind.yaml
+    - name: k0s
+      kubeconfig: build/site/k0s/kubeconfig.yaml
+      k0sconfig: hack/kubernetes/k0s.yaml
+      k0sctlconfig: hack/kubernetes/cluster.yaml
+  sites:
+    - name: sandbox
+      siteRef:
+        name: sandbox
+  # profiles:
+  #   - name: carrier
+  #   - name: cruiser
+  #   - name: default
+  #   - name: depot
+  #   - name: harbor
+  # stacks:
+  #   - name: core
+  #     stackRef:
+  #       name: core
+  # providers:
+  #   capi:
+  #     - name: byoh
+  #       providerRef:
+  #         name: byoh
+  #     - name: openstack
+  #       providerRef:
+  #         name: openstack
+  #   dns:
+  #     - name: maas
+  #       providerRef:
+  #         name: maas
+  #     - name: cloudflare
+  #       providerRef:
+  #         name: cloudflare
+  #   network:
+  #     - name: sonic
+  #       providerRef:
+  #         name: sonic
+  #     - name: paloaltonetworks
+  #       providerRef:
+  #         name: paloaltonetworks
+  #   secret:
+  #     - name: onepassword
+  #       providerRef:
+  #         name: onepassword
+  #     - name: vault
+  #       providerRef:
+  #         name: vault
+  #   cloud:
+  #     - name: openstack
+  #       providerRef:
+  #         name: openstack
+  #     - name: kubernetes
+  #       providerRef:
+  #         name: kubernetes
+status: {}

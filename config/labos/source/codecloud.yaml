@@ -1,0 +1,9 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: SourceDefinition
+metadata:
+  name: codecloud
+spec:
+  type: CodeCloud
+  config: {}
+status: {}

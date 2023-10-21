@@ -1,7 +1,8 @@
-*.pfx
 *.asc
-*.p7r
 *.csr
+*.json
+*.p7r
 *.pem
+*.pfx
 */**/bm/*
 !*.sops.pub.asc

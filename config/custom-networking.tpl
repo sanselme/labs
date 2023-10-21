@@ -25,6 +25,11 @@ network:
         forward-delay: 4
       interfaces:
         - swp1
+    br1:
+      parameters:
+        stp: true
+        forward-delay: 4
+      interfaces:
         - swp2
   ethernets:
     lo:

@@ -48,3 +48,16 @@ maas admin boot-resources import
 maas "${PROFILE}" subnet read "${SUBNET_CIDR}" | grep fabric_id
 maas "${PROFILE}" rack-controllers read | grep hostname | cut -d '"' -f 4
 maas "${PROFILE}" vlan update "${FABRIC_ID}" untagged dhcp_on=True primary_rack="${RACK_CONTR_HOSTNAME}"
+
+# FIXME: Patch MAAS
+# apt-get install -y wakeonlan
+
+# git clone https://github.com/kairen/maas-wakeonlan-driver.git
+# cd maas-wakeonlan-driver
+
+# PATCH_DIR="/usr/lib/python3/dist-packages/provisioningserver/"
+# patch -p1 -d "${PATCH_DIR}" < maas-wol.diff
+# systemctl restart maas-rackd.service maas-regiond.service
+
+# cd -
+# rm -rf maas-wakeonlan-driver

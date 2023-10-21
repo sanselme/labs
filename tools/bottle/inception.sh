@@ -19,7 +19,7 @@ set -e
 : "${APPROLE_ID:=maas}"
 : "${EMAIL_ADDRESS:=none@none}"
 : "${MAAS_POLICY:=maas}"
-: "${MAAS_URL:=http://localhost:5420/MAAS}"
+: "${MAAS_URL:=http://localhost:5240/MAAS}"
 : "${POLICY_FILE:=policy.hcl}"
 : "${PROFILE:=admin}"
 : "${ROLE_NAME:=maas}"
@@ -30,21 +30,23 @@ set -e
 systemctl enable vault.service
 
 # Install MAAS
-apt-add-repository ppa:maas/3.4-next
-apt update
+apt-add-repository ppa:maas/3.2
 apt-get -y install maas
 
 # Configure MAAS
 systemctl disable systemd-timesyncd
+
+maas init
+
 maas createadmin --username="${PROFILE}" --email="${EMAIL_ADDRESS}"
-maas status
-maas init region
-maas apikey --username="${PROFILE}" >api-key-file
-maas login "${PROFILE}" "${MAAS_URL}" <api-key-file
+maas apikey --username="${PROFILE}" >.maas-apikey
+maas login "${PROFILE}" "${MAAS_URL}" <.maas-apikey
+
 maas "${PROFILE}" maas set-config name=upstream_dns value="1.1.1.1 9.9.9.9"
-maas "${PROFILE}" boot-source-selections create 1 os="ubuntu" release="trusty" arches="amd64" subarches="*" labels="*"
+maas "${PROFILE}" boot-source-selections create 1 os="ubuntu" release="jammy" arches="amd64" subarches="*" labels="*"
 maas "${PROFILE}" boot-resources read | jq -r '.[] | "\(.name)\t\(.architecture)"'
 maas admin boot-resources import
+
 maas "${PROFILE}" subnet read "${SUBNET_CIDR}" | grep fabric_id
 maas "${PROFILE}" rack-controllers read | grep hostname | cut -d '"' -f 4
 maas "${PROFILE}" vlan update "${FABRIC_ID}" untagged dhcp_on=True primary_rack="${RACK_CONTR_HOSTNAME}"

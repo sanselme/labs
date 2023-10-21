@@ -1,0 +1,12 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: ConfigDefinition
+metadata:
+  name: ops
+  namespace: tenant
+spec:
+  operation:
+    type: managed
+    managed: {}
+    unmanaged: {}
+status: {}

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,27 +14,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
----
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: rook-ceph
-components:
-  - ../../../global/certmanager/issuer
-  # - ../../../global/csi/ceph/rook/cluster
-  - ../../../global/csi/ceph/rook/external
-resources:
-  - ../../../global/csi/addons
-  - ../../../global/csi/ceph/rook
-  - ../../../global/csi/snapshotter
-  - namespace.yaml
-patches:
-  - path: patch/cluster.yaml
-  - path: patch/issuer.yaml
-  - path: patch/operator.yaml
-  - patch: |-
-      - op: replace
-        path: /metadata/name
-        value: ceph-ca-issuer
-    target:
-      kind: HelmRelease
-      name: issuer
+set -e
+
+# load environment variables
+source ./scripts/load-env.sh
+
+# configure machine
+./scripts/setup-machine.sh
+
+# install packages
+./scripts/install-docker.sh
+./scripts/install-cri-docker.sh
+./scripts/install-kubernetes.sh

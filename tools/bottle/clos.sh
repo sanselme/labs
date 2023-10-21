@@ -37,7 +37,7 @@ apt-get update -qq &&
   apt-get install -y --no-install-recommends \
     apt-transport-https \
     ca-certificates \
-    cephfs-shell \
+    ceph-fuse \
     curl \
     dbus \
     fdisk \
@@ -55,6 +55,7 @@ apt-get update -qq &&
     python3-heatclient \
     python3-openstackclient \
     python3-pip \
+    python3-rbd \
     software-properties-common \
     sudo \
     systemd \
@@ -78,17 +79,6 @@ apt-get update -qq &&
   apt-get install -y --no-install-recommends \
     helm \
     vault &&
-  # Prevents journald from reading kernel messages from /dev/kmsg
-  echo "ReadKMsg=no" >>/etc/systemd/journald.conf &&
-  # Don't start any optional services except for the few we need.
-  # (specifically, don't start avahi-daemon, isc-dhcp-server, or libvirtd)
-  find /etc/systemd/system \
-    /lib/systemd/system \
-    -path '*.wants/*' \
-    -not -name '*journald*' \
-    -not -name '*systemd-tmpfiles*' \
-    -not -name '*systemd-user-sessions*' \
-    -exec rm \{} \; &&
   systemctl set-default multi-user.target
 
 # TODO: Verify checksums
@@ -100,48 +90,43 @@ curl -fsSLo /usr/local/bin/clusterctl "https://github.com/kubernetes-sigs/cluste
   curl -fsSLo /usr/local/bin/sops "https://github.com/mozilla/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.$(dpkg --print-architecture)" &&
   chmod +x /usr/local/bin/sops &&
   curl -fsSLO "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_$(dpkg --print-architecture).tar.gz" |
-  tar xzf "yq_linux_$(dpkg --print-architecture).tar.gz" -C /usr/local/bin/ && mv /usr/local/bin/yq_linux_arm64 /usr/local/bin/yq &&
+  tar xzf "yq_linux_$(dpkg --print-architecture).tar.gz" -C /usr/local/bin/ &&
+  mv "/usr/local/bin/yq_linux_$(dpkg --print-architecture)" /usr/local/bin/yq &&
   curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/download/v${KREW_VERSION}/${KREW}.tar.gz" |
-  tar xzf "${KREW}.tar.gz" -C "/tmp/"
+  tar xzf "${KREW}.tar.gz" -C /tmp/ && mv "/tmp/krew-${OS}_${ARCH}" /usr/local/bin/krew
 
 # Install krew plugins
-"/tmp/${KREW}" install krew &&
-  kubectl krew install \
-    ca-cert \
-    cert-manager \
-    ctx \
-    gopass \
-    hns \
-    images \
-    konfig \
-    minio \
-    node-shell \
-    ns \
-    oidc-login \
-    open-svc \
-    openebs \
-    operator \
-    outdated \
-    rabbitmq \
-    rook-ceph \
-    starboard \
-    view-secret \
-    view-serviceaccount-kubeconfig \
-    view-utilization
+krew install \
+  ca-cert \
+  cert-manager \
+  ctx \
+  gopass \
+  hns \
+  images \
+  konfig \
+  minio \
+  node-shell \
+  ns \
+  oidc-login \
+  open-svc \
+  openebs \
+  operator \
+  outdated \
+  rabbitmq \
+  rook-ceph \
+  starboard \
+  view-secret \
+  view-serviceaccount-kubeconfig \
+  view-utilization
 
-# Housekeeping
-apt-get clean -y &&
-  rm -rf \
-    ./*.tar.gz \
-    /var/cache/debconf/* \
-    /var/lib/apt/lists/* \
-    /var/log/* \
-    /tmp/* \
-    /var/tmp/* \
-    /usr/share/doc/* \
-    /usr/share/man/* \
-    /usr/share/local/*
+# TODO: enable cgroupv2
+# systemd.unified_cgroup_hierarchy=1
 
-# quiet sudo for the admin user
-umask 0337
-echo 'Defaults:admin !pam_session, !syslog' >/etc/sudoers.d/99-admin-no-log
+# TODO: enable cpu,cpuset & io delegation
+# cat "/sys/fs/cgroup/user.slice/user-$(id -u).slice/user@$(id -u).service/cgroup.controllers"
+# mkdir -p /etc/systemd/system/user@.service.d
+# cat <<EOF | sudo tee /etc/systemd/system/user@.service.d/delegate.conf
+# [Service]
+# Delegate=cpu cpuset io memory pids
+# EOF
+# sudo systemctl daemon-reload

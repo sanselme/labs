@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-LO_ADDR="10.1.0.64"
-MGMT_ADDR_CIDR="10.0.0.64/24"
+LO_ADDR=""
+MGMT_ADDR_CIDR=""
 
-L3_VLAN="3000"
-L3_VNI="103000"
-TENANT_NAME="red"
+L3_VLAN=""
+L3_VNI=""
+TENANT_NAME=""
 
 AS_NUMBER=""
 BGP_PEER_INT=""

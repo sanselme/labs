@@ -19,8 +19,9 @@ FROM ${BASE_IMAGE}
 ENV DEBCONF_NONINTERACTIVE_SEEN=true
 ENV DEBIAN_FRONTEND=noninteractive
 
-COPY . /src
-RUN /src/labs/tools/bottle/clos.sh
+COPY . /src/labs
+RUN /src/labs/tools/bottle/clos.sh && \
+  /src/labs/tools/bottle/cleanup.sh
 
 # Make use of stopsignal (instead of sigterm) to stop systemd containers.
 STOPSIGNAL SIGRTMIN+3

@@ -194,3 +194,4 @@ bin/
 !*.sops.pub
 !*.tpl
 !*cosign.pub
+!bootstrap-kubeconfig.conf

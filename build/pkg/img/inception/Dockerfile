@@ -17,5 +17,5 @@ ARG BASE_IMAGE=ghcr.io/sanselme/labs/clos:v0.1.0
 FROM ${BASE_IMAGE}
 
 # Configure
-RUN /src/labs/tools/vault/unseal.sh && \
-  /src/labs/tools/bottle/inception.sh
+RUN /src/labs/tools/bottle/inception.sh && \
+  /src/labs/tools/bottle/cleanup.sh

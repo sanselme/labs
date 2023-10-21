@@ -1,0 +1,10 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: ProviderDefinition
+metadata:
+  name: sonic
+  namespace: providers
+spec:
+  type: Network
+  config: {}
+status: {}

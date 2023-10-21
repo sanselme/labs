@@ -1,0 +1,10 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: DeviceDefinition
+metadata:
+  name: memory
+  namespace: tenant
+spec:
+  type: Memory
+  config: {}
+status: {}

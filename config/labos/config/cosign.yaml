@@ -1,0 +1,14 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: ConfigDefinition
+metadata:
+  name: cosign
+  namespace: tenant
+spec:
+  password: null
+  pubkey:
+    path: build/.cosign.key
+  providerRef:
+    name: onepassword
+    vault: Developer
+status: {}

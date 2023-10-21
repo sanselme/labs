@@ -1,0 +1,12 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: MachineDefinition
+metadata:
+  name: sandbox
+  namespace: tenant
+spec:
+  devices:
+    - name: processor
+    - name: memory
+    - name: storage
+status: {}

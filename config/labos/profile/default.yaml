@@ -1,0 +1,13 @@
+---
+apiVersion: cloudos.anselm.es/v1alpha1
+kind: ProfileDefinition
+metadata:
+  name: default
+spec:
+  config: {}
+  charts: []
+  manifests: []
+  packages: []
+  stacks:
+    - name: core
+status: {}

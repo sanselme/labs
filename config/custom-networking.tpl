@@ -22,10 +22,21 @@ network:
     br0:
       parameters:
         stp: true
-        forward-delay: 4
+        forward-delay: 15
       interfaces:
         - swp1
         - swp2
+    br1:
+      parameters:
+        stp: true
+        forward-delay: 15
+      interfaces:
+        - swp2
+    lxdbr0:
+      parameters:
+        stp: true
+        forward-delay: 15
+      interfaces: []
   ethernets:
     lo:
       addresses: 10.20.30.1/32

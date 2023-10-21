@@ -16,10 +16,14 @@ packages:
   - apparmor
   - apt-transport-https
   - ca-certificates
+  - ceph-fuse
   - curl
+  - fdisk
+  - gdisk
   - gnupg
   - libcephfs2
   - libseccomp2
+  - parted
   - python3-rbd
 write_files:
   - path: /usr/local/lib/systemd/system/byoh-hostagent-watcher.path

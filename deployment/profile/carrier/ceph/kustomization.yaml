@@ -18,7 +18,8 @@ kind: Kustomization
 namespace: rook-ceph
 components:
   - ../../../global/certmanager/issuer
-  - ../../../global/csi/ceph/rook/cluster
+  # - ../../../global/csi/ceph/rook/cluster
+  - ../../../global/csi/ceph/rook/external
 resources:
   - ../../../global/csi/addons
   - ../../../global/csi/ceph/rook

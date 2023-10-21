@@ -3,5 +3,5 @@
 *.p7r
 *.csr
 *.pem
-*/**/bm/*
+*/**/***
 !*.sops.pub.asc

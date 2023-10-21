@@ -35,7 +35,7 @@ spec:
     cloudflare:
       secretName: cloudflare-creds
       proxied: false
-    designate:
+    designate: {}
     infoblox:
       gridHost: ""
       view: ""

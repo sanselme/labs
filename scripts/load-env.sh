@@ -19,22 +19,51 @@ CILIUM_VERSION="$(yq '.spec.chart.spec.version' deployment/global/cni/cilium/rel
 FLUX_VERSION="$(yq '.spec.chart.spec.version' deployment/global/cicd/flux/release.yaml)"
 export CILIUM_VERSION FLUX_VERSION
 
-export CLUSTER_NAME="sandbox"
-export CONFIG_FILE="hack/kind.yaml"
-export K0S_CONFIG_FILE="hack/kubernetes/k0s.yaml"
-export K0SCTL_CONFIG_FILE="hack/kubernetes/cluster.yaml"
-export SSH_PUB_KEY_FILE="${HOME}/.ssh/id_ed25519.pub"
+CLUSTER_NAME="$(yq '.metadata.name' config/labos/cloud.yaml)"
+CONFIG_FILE="$(yq '.spec.clusters[] | select(.name == "kind") | .clusterconfig' config/labos/cloud.yaml)"
+K0S_CONFIG_FILE="$(yq '.spec.clusters[] | select(.name == "k0s") | .k0sconfig' config/labos/cloud.yaml)"
+K0SCTL_CONFIG_FILE="$(yq '.spec.clusters[] | select(.name == "k0s") | .k0sctlconfig' config/labos/cloud.yaml)"
+SSH_PUB_KEY_FILE="$(yq '.spec.pubkey.path' config/labos/config/ssh.yaml)"
+export CLUSTER_NAME CONFIG_FILE K0S_CONFIG_FILE K0SCTL_CONFIG_FILE SSH_PUB_KEY_FILE
 
-export COSIGN_KEY_OP_TITLE="${1:-'cosign-sandbox'}}"
-export COSIGN_KEY="${2:-build/.cosign.key}"
-export KEY_COMMENT="test key for sops"
-export KEY_NAME="sandbox"
-export PUB_KEY="${1:-build/.sops.pub.asc}"
-export SEC_KEY_OP_TITLE="${1:-'sops-sandbox'}}"
-export SEC_KEY="${2:-build/.sops.asc}"
-export SOPS_CONFIG="${3:-build/.sops.yaml}"
+# echo """
+# CILIUM_VERSION=${CILIUM_VERSION}
+# FLUX_VERSION=${FLUX_VERSION}
+
+# CLUSTER_NAME=${CLUSTER_NAME}
+# CONFIG_FILE=${CONFIG_FILE}
+# K0S_CONFIG_FILE=${K0S_CONFIG_FILE}
+# K0SCTL_CONFIG_FILE=${K0SCTL_CONFIG_FILE}
+# SSH_PUB_KEY_FILE=${SSH_PUB_KEY_FILE}
+# """
+
+COSIGN_KEY_OP="$(yq '.spec.config.cosign.providerRef.path' config/labos/cloud.yaml)"
+COSIGN_KEY="$(yq '.spec.pubkey.path' config/labos/config/cosign.yaml)"
+KEY_COMMENT="test key for sops"
+KEY_NAME="sandbox"
+PUB_KEY="$(yq '.spec.pubkey.path' config/labos/config/gpg.yaml)"
+SEC_KEY_OP_TITLE="$(yq '.spec.config.sops.providerRef.path' config/labos/cloud.yaml)"
+SEC_KEY="$(yq '.spec.privkey.path' config/labos/config/sops.yaml)"
+SOPS_CONFIG="$(yq '.spec.config.path' config/labos/config/sops.yaml)"
+export COSIGN_KEY_OP COSIGN_KEY KEY_COMMENT KEY_NAME PUB_KEY SEC_KEY_OP_TITLE SEC_KEY SOPS_CONFIG
 
 export BITNAMI="oci://registry-1.docker.io/bitnamicharts"
+
+# echo """
+# COSIGN_KEY_OP=${COSIGN_KEY_OP}
+# COSIGN_KEY=${COSIGN_KEY}
+# KEY_COMMENT=${KEY_COMMENT}
+# KEY_NAME=${KEY_NAME}
+# PUB_KEY=${PUB_KEY}
+# SEC_KEY_OP_TITLE=${SEC_KEY_OP_TITLE}
+# SEC_KEY=${SEC_KEY}
+# SOPS_CONFIG=${SOPS_CONFIG}
+
+# BITNAMI=${BITNAMI}
+# """
+
+PGP="$(gpg --list-keys "${KEY_NAME}" | head -n +2 | tail -n 1 | tr -d ' ')"
+export PGP
 
 # verify dependencies are installed
 CILIUM_CMD="$(command -v cilium)"
@@ -130,10 +159,10 @@ install_cilium() {
 
 # install flux
 install_flux() {
-  [[ -z "$(helm ls -n sre | awk /flux/)" ]] &&
+  [[ -z "$(helm ls -n cicd | awk /flux/)" ]] &&
     helm upgrade flux \
       --create-namespace \
       --install "${BITNAMI}/flux" \
-      --namespace sre \
+      --namespace cicd \
       --version "${FLUX_VERSION}" || echo "Flux is already installed!!!"
 }

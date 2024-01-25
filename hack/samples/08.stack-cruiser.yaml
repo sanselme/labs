@@ -1,0 +1,438 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/component: net-certmanager
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: 1.9.4
+    networking.knative.dev/certificate-provider: cert-manager
+    serving.knative.dev/controller: "true"
+  name: knative-serving-certmanager
+rules:
+- apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
+  - clusterissuers
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+- apiGroups:
+  - acme.cert-manager.io
+  resources:
+  - challenges
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
+  - patch
+  - watch
+---
+apiVersion: v1
+data:
+  _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this block and unindented to actually change the configuration.
+
+    # issuerRef is a reference to the issuer for this certificate.
+    # IssuerRef should be either `ClusterIssuer` or `Issuer`.
+    # Please refer `IssuerRef` in https://github.com/cert-manager/cert-manager/tree/master/pkg/apis/certmanager/v1/types_certificate.go
+    # for more details about IssuerRef configuration.
+    issuerRef: |
+      kind: ClusterIssuer
+      name: letsencrypt-issuer
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: net-certmanager
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: 1.9.4
+    networking.knative.dev/certificate-provider: cert-manager
+  name: config-certmanager
+  namespace: knative-serving
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/component: net-certmanager
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: 1.9.4
+    networking.knative.dev/certificate-provider: cert-manager
+  name: net-certmanager-webhook-certs
+  namespace: knative-serving
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: event-display
+  namespace: tenant
+spec:
+  template:
+    spec:
+      containers:
+      - image: gcr.io/knative-releases/knative.dev/eventing/cmd/event_display
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: net-certmanager-controller
+    app.kubernetes.io/component: net-certmanager
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: 1.9.4
+    networking.knative.dev/certificate-provider: cert-manager
+  name: net-certmanager-controller
+  namespace: knative-serving
+spec:
+  ports:
+  - name: http-metrics
+    port: 9090
+    targetPort: 9090
+  - name: http-profiling
+    port: 8008
+    targetPort: 8008
+  selector:
+    app: net-certmanager-controller
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: net-certmanager
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: 1.9.4
+    networking.knative.dev/certificate-provider: cert-manager
+    role: net-certmanager-webhook
+  name: net-certmanager-webhook
+  namespace: knative-serving
+spec:
+  ports:
+  - name: http-metrics
+    port: 9090
+    targetPort: metrics
+  - name: http-profiling
+    port: 8008
+    targetPort: profiling
+  - name: https-webhook
+    port: 443
+    targetPort: https-webhook
+  selector:
+    app: net-certmanager-webhook
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: net-certmanager
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: 1.9.4
+    networking.knative.dev/certificate-provider: cert-manager
+  name: net-certmanager-controller
+  namespace: knative-serving
+spec:
+  selector:
+    matchLabels:
+      app: net-certmanager-controller
+  template:
+    metadata:
+      labels:
+        app: net-certmanager-controller
+        app.kubernetes.io/component: net-certmanager
+        app.kubernetes.io/name: knative-serving
+        app.kubernetes.io/version: 1.9.4
+    spec:
+      containers:
+      - env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONFIG_LOGGING_NAME
+          value: config-logging
+        - name: CONFIG_OBSERVABILITY_NAME
+          value: config-observability
+        - name: METRICS_DOMAIN
+          value: knative.dev/serving
+        image: gcr.io/knative-releases/knative.dev/net-certmanager/cmd/controller@sha256:f7eaed85f2c0c6396c053eaf0eef84bd1a530d7a2c27c5ee7eb72f0fd0a0bded
+        name: controller
+        ports:
+        - containerPort: 9090
+          name: metrics
+        - containerPort: 8008
+          name: profiling
+        resources:
+          limits:
+            cpu: 300m
+            memory: 400Mi
+          requests:
+            cpu: 30m
+            memory: 40Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+      serviceAccountName: controller
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: net-certmanager
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: 1.9.4
+    networking.knative.dev/certificate-provider: cert-manager
+  name: net-certmanager-webhook
+  namespace: knative-serving
+spec:
+  selector:
+    matchLabels:
+      app: net-certmanager-webhook
+      role: net-certmanager-webhook
+  template:
+    metadata:
+      labels:
+        app: net-certmanager-webhook
+        app.kubernetes.io/component: net-certmanager
+        app.kubernetes.io/name: knative-serving
+        app.kubernetes.io/version: 1.9.4
+        role: net-certmanager-webhook
+    spec:
+      containers:
+      - env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONFIG_LOGGING_NAME
+          value: config-logging
+        - name: CONFIG_OBSERVABILITY_NAME
+          value: config-observability
+        - name: METRICS_DOMAIN
+          value: knative.dev/net-certmanager
+        - name: WEBHOOK_NAME
+          value: net-certmanager-webhook
+        - name: WEBHOOK_PORT
+          value: "8443"
+        image: gcr.io/knative-releases/knative.dev/net-certmanager/cmd/webhook@sha256:cfce0aa45e8caf44aab910ebe007743a13eb032237b7946a45f6814020632a83
+        name: webhook
+        ports:
+        - containerPort: 9090
+          name: metrics
+        - containerPort: 8008
+          name: profiling
+        - containerPort: 8443
+          name: https-webhook
+        resources:
+          limits:
+            cpu: 200m
+            memory: 200Mi
+          requests:
+            cpu: 20m
+            memory: 20Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+      serviceAccountName: controller
+---
+apiVersion: eventing.knative.dev/v1
+kind: Broker
+metadata:
+  name: default
+  namespace: tenant
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: knative-cluster-issuer
+  namespace: knative-serving
+spec:
+  chart:
+    spec:
+      chart: sanselme/ca-clusterissuer
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: docker
+        namespace: sre
+      version: 0.1.1
+  dependsOn:
+  - name: cert-manager
+    namespace: cert-manager
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  upgrade:
+    crds: CreateReplace
+  values:
+    conf:
+      ca:
+        issuer:
+          name: knative-ca-issuer
+        secret:
+          name: knative-ca-key-pair
+    manifests:
+      secret_ca: false
+---
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeEventing
+metadata:
+  name: knative-eventing
+  namespace: knative-eventing
+spec:
+  config:
+    config-br-default-channel:
+      channel-template-spec: |
+        apiVersion: messaging.knative.dev/v1beta1
+        kind: KafkaChannel
+        spec:
+          numPartitions: 10
+          replicationFactor: 1
+    default-ch-webhook:
+      default-ch-config: |
+        clusterDefault:
+          apiVersion: messaging.knative.dev/v1beta1
+          kind: KafkaChannel
+          spec:
+            numPartitions: 10
+            replicationFactor: 1
+  defaultBrokerClass: MTChannelBasedBroker
+  source:
+    ceph:
+      enabled: true
+    github:
+      enabled: true
+    rabbitmq:
+      enabled: true
+    redis:
+      enabled: true
+  workloads:
+  - name: eventing-controller
+    resources:
+    - container: eventing-controller
+      limits:
+        cpu: 1000m
+        memory: 250M
+      requests:
+        cpu: 300m
+        memory: 100M
+---
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeServing
+metadata:
+  name: knative-serving
+  namespace: knative-serving
+spec:
+  config:
+    network:
+      auto-tls: Enabled
+      http-protocol: Redirected
+      ingress-class: kourier.ingress.networking.knative.dev
+  deployments: []
+  high-availability:
+    replicas: 3
+  ingress:
+    kourier:
+      enabled: true
+  security:
+    securityGuard:
+      enabled: false
+  workloads:
+  - name: controller
+    resources:
+    - container: controller
+      limits:
+        cpu: 1000m
+        memory: 250Mi
+      requests:
+        cpu: 300m
+        memory: 100Mi
+  - name: webhook
+    replicas: 2
+    resources:
+    - container: controller
+      limits:
+        cpu: 1000m
+        memory: 250Mi
+      requests:
+        cpu: 300m
+        memory: 100Mi
+  - name: activator
+    replicas: 2
+    resources:
+    - container: controller
+      limits:
+        cpu: 1000m
+        memory: 250Mi
+      requests:
+        cpu: 300m
+        memory: 100Mi
+---
+apiVersion: sources.knative.dev/v1
+kind: ApiServerSource
+metadata:
+  name: apiserversource
+  namespace: tenant
+spec:
+  mode: Reference
+  resources:
+  - apiVersion: v1
+    kind: Event
+  serviceAccountName: default
+  sink:
+    ref:
+      apiVersion: eventing.knative.dev/v1
+      kind: Broker
+      name: default
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  labels:
+    app.kubernetes.io/component: net-certmanager
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: 1.9.4
+    networking.knative.dev/certificate-provider: cert-manager
+  name: config.webhook.net-certmanager.networking.internal.knative.dev
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: net-certmanager-webhook
+      namespace: knative-serving
+  failurePolicy: Fail
+  name: config.webhook.net-certmanager.networking.internal.knative.dev
+  objectSelector:
+    matchLabels:
+      app.kubernetes.io/component: net-certmanager
+      app.kubernetes.io/name: knative-serving
+  sideEffects: None

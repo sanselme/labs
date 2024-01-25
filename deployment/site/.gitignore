@@ -1,8 +1,0 @@
-*.*
-*/**
-!.gitignore
-!codecloud
-!bootstrap/**
-!sandbox
-!skiff
-!wordpress

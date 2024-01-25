@@ -18,4 +18,3 @@ kind: Kustomization
 namespace: kasten
 resources:
   - release.yaml
-  - source.yaml

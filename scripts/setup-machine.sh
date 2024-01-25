@@ -28,6 +28,10 @@ localectl set-locale LANG="${LOCALE}"
 timedatectl set-ntp true
 timedatectl set-timezone "${TIMEZONE}"
 
+# update grub
+sed -i 's/GRUB_CMDLINE_LINUX=.*/GRUB_CMDLINE_LINUX="console=tty0 console=ttyS0,115200n8 intel_iommu=on iommu=pt"/g' /etc/default/grub
+update-grub
+
 # disable firewall
 if command -v ufw >>/dev/null; then
   ufw disable

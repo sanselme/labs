@@ -1,0 +1,64 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea-runner
+  namespace: cicd
+  labels:
+    app.kubernetes.io/instance: gitea-runner
+    app.kubernetes.io/name: gitea-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: gitea-runner
+      app.kubernetes.io/name: gitea-runner
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: gitea-runner
+        app.kubernetes.io/name: gitea-runner
+      annotations:
+        checksum/config: 77220096f969c7c340ac288b9b83bbae020530f9395b9052d2f95a300f34ca15
+    spec:
+      volumes:
+        - name: config
+          configMap:
+            name: gitea-runner-config
+        - name: temp
+          emptyDir: {}
+        - name: data
+          persistentVolumeClaim:
+            claimName: gitea-runner-storage
+      initContainers:
+        - name: register-runner
+          image: sanselme/gitea-runner:0.0.1
+          args:
+            - register
+            - --instance
+            - http://192.168.8.8:3000
+            - --token
+            - ${GITEA_TOKEN}
+            - --no-interactive
+          env:
+            - name: GITEA_RUNNER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: gitea-creds
+                  key: runner_token
+          resources: {}
+      containers:
+        - name: gitea
+          image: sanselme/gitea-runner:0.0.1
+          resources: {}
+          volumeMounts:
+            - name: temp
+              mountPath: /tmp
+            - name: config
+              mountPath: /etc/gitea
+            - name: data
+              mountPath: /var/lib/gitea
+          livenessProbe: {}
+          readinessProbe: {}
+      securityContext:
+        fsGroup: 1000

@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 set -e
-source scripts/load-env.sh
 
 NAME="skiff"
 CLOUD_INIT_FILE="hack/multipass/cloud-init.yaml"

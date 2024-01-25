@@ -20,15 +20,15 @@ metadata:
 spec:
   chart:
     spec:
-      chart: sanselme/redis
+      chart: bitnamicharts/redis
       reconcileStrategy: ChartVersion
       sourceRef:
         kind: HelmRepository
         name: docker
         namespace: sre
-      version: 0.1.4
+      version: 18.3.2
   install:
-    crds: Create
+    crds: CreateReplace
     createNamespace: true
     replace: true
   interval: 1m0s
@@ -36,8 +36,4 @@ spec:
     crds: CreateReplace
   postRenderers:
     - kustomize:
-        images:
-          - name: docker.io/library/docker
-          - name: docker.io/library/redis
-          - name: docker.io/redislabs/redis-py
-          - name: quay.io/airshipit/kubernetes-entrypoint
+        images: []

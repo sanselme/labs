@@ -15,6 +15,22 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
-resources: []
-# - k8srequiredlabels.yaml
-# - k8sexternaldatacosign.yaml
+resources:
+  - annotations.yaml
+  - anonymousaccess.yaml
+  - apparmor.yaml
+  - deprecatedapis.yaml
+  - filesystem.yaml
+  - labels.yaml
+  - limits.yaml
+  - namespace.yaml
+  - nodeport.yaml
+  - privileged.yaml
+  - probes.yaml
+  - readonlyfs.yaml
+  - repositories.yaml
+  - requests.yaml
+  - resources.yaml
+  - seccomp.yaml
+  - storageclass.yaml
+  - volumes.yaml

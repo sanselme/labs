@@ -1,0 +1,10 @@
+[Unit]
+Description=OpenEBS Hostpath (/var/openebs)
+ConditionPathExists=/var/openebs
+
+[Automount]
+Where=/var/openebs
+TimeoutIdleSec=10
+
+[Install]
+WantedBy=multi-user.target

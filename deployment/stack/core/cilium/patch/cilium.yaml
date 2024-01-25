@@ -1,0 +1,95 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: cilium
+spec:
+  dependsOn:
+    - name: cilium-ca-issuer
+    - name: prometheus
+      namespace: observability
+  values:
+    tunnel: disabled
+    encryption:
+      enabled: false
+      type: wireguard
+    hostFirewall:
+      enabled: true
+    externalIPs:
+      enabled: true
+    gatewayAPI:
+      enabled: true
+    loadBalancer:
+      mode: dsr
+      serviceTopology: true
+      algorithm: maglev
+      l7:
+        backend: envoy
+    operator:
+      dashboards:
+        enabled: true
+        namespace: observability
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+    monitor:
+      enabled: true
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        trustCRDsExist: true
+    dashboards:
+      enabled: true
+      namespace: observability
+    proxy:
+      prometheus:
+        enabled: true
+    ingressController:
+      enabled: false
+      loadbalancerMode: shared
+    hubble:
+      metrics:
+        dashboards:
+          enabled: true
+          namespace: observability
+        enableOpenMetrics: true
+        enabled:
+          - dns:query;ignoreAAAA
+          - drop
+          - tcp
+          - flow
+          - icmp
+          - http
+        serviceMonitor:
+          enabled: true
+      tls:
+        auto:
+          certManagerIssuerRef:
+            group: cert-manager.io
+            kind: Issuer
+            name: cilium-ca-issuer
+          method: certmanager
+      ui:
+        enabled: false
+      relay:
+        enabled: false
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: true

@@ -1,0 +1,86 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: K0sControlPlane
+metadata:
+  name: k0smotron-control-plane
+spec:
+  replicas: 1
+  k0sConfigSpec:
+    # args:
+    #   - --enable-worker
+    #   - --no-taints # disable default taints
+    tunneling:
+      enabled: false
+      mode: tunnel # Tunneling mode: tunnel or proxy (default: tunnel)
+    k0s:
+      apiVersion: k0s.k0sproject.io/v1beta1
+      kind: ClusterConfig
+      metadata:
+        name: k0s
+      spec:
+        api:
+          extraArgs:
+            anonymous-auth: "true" # anonymous-auth=true is needed for k0s to allow unauthorized health-checks on /healthz
+          # sans:
+          #   - killmonger.internal
+        # featureGates:
+        #   - name: UserNamespacesSupport
+        #     enabled: true
+        extensions:
+          storage:
+            type: openebs_local_storage
+          helm:
+            charts:
+              - name: cilium
+                namespace: kube-system
+                chartname: cilium/cilium
+                version: 1.14.3
+                values: |
+                  tunnel: disabled
+                  ipv4NativeRoutingCIDR: 192.168.11.0/24
+                  devices:
+                    - oam
+                  l2announcements:
+                    enabled: true
+                  externalIPs:
+                    enabled: true
+                  hostFirewall:
+                    enabled: true
+                  loadBalancer:
+                    mode: dsr
+                    serviceTopology: true
+                    algorithm: maglev
+                    l7:
+                      backend: envoy
+                  operator:
+                    replicas: 1
+              - name: flux
+                namespace: cicd
+                chartname: bitnami/flux
+                version: 0.4.0
+            repositories:
+              - name: cilium
+                url: https://helm.cilium.io/
+              - name: bitnami
+                url: https://charts.bitnami.com/bitnami/
+        telemetry:
+            enabled: false
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      kind: Machine
+      name: k0smotron-control-plane

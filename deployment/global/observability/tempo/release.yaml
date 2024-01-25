@@ -28,7 +28,7 @@ spec:
         namespace: sre
       version: 2.3.6
   install:
-    crds: Create
+    crds: CreateReplace
     createNamespace: true
     replace: true
   interval: 1m0s

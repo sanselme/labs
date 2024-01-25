@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
-# set -e
+set -e
 
 export CLUSTERCTL_VERSION=1.5.2
 export COSIGN_VERSION=2.2.0
@@ -37,7 +37,6 @@ apt-get update -qq &&
   apt-get install -y --no-install-recommends \
     apt-transport-https \
     ca-certificates \
-    ceph-fuse \
     curl \
     dbus \
     fdisk \
@@ -119,14 +118,17 @@ krew install \
   view-serviceaccount-kubeconfig \
   view-utilization
 
-# TODO: enable cgroupv2
-# systemd.unified_cgroup_hierarchy=1
+# install helm plugins
+helm plugin install https://github.com/sigstore/helm-sigstore
+helm plugin install https://github.com/komodorio/helm-dashboard.git
 
-# TODO: enable cpu,cpuset & io delegation
-# cat "/sys/fs/cgroup/user.slice/user-$(id -u).slice/user@$(id -u).service/cgroup.controllers"
-# mkdir -p /etc/systemd/system/user@.service.d
-# cat <<EOF | sudo tee /etc/systemd/system/user@.service.d/delegate.conf
-# [Service]
-# Delegate=cpu cpuset io memory pids
-# EOF
-# sudo systemctl daemon-reload
+# enable cpu,cpuset & io delegation
+mkdir -p /etc/systemd/system/user@.service.d
+cat <<EOF | tee /etc/systemd/system/user@.service.d/delegate.conf
+[Service]
+Delegate=cpu cpuset io memory pids
+EOF
+sudo systemctl daemon-reload
+
+# install k0s
+curl -sSLf https://get.k0s.sh | sudo sh

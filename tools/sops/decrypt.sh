@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 set -e
-source scripts/load-env.sh
 
 DIR="${1}"
 [[ -z ${DIR} ]] && echo "no directory provided" && exit 1
@@ -25,7 +24,7 @@ FILES="$(find "${DIR}" -type f -name "*.yaml" ! -name kustomization.yaml)"
 
 # decrypts file with sops
 echo "decrypting files in ${DIR}..."
-for file in "${FILES[@]}"; do
+for file in ${FILES[@]}; do
   sops \
     --decrypt \
     --config "${SOPS_CONFIG}" \

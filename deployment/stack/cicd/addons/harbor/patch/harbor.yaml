@@ -1,0 +1,81 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: harbor
+spec:
+  dependsOn:
+    - name: openebs
+      namespace: kube-system
+    - name: prometheus
+      namespace: observability
+  values:
+    proxy:
+      httpProxy: ""
+      httpsProxy: ""
+      noProxy: 127.0.0.1,localhost,.local,.internal
+      components:
+        - core
+        - jobservice
+        - trivy
+    exposureType: proxy
+    service:
+      type: ClusterIP
+    persistence:
+      enabled: true
+      persistentVolumeClaim:
+        registry:
+          storageClass: openebs-hostpath
+        jobservice:
+          storageClass: openebs-hostpath
+          scanData:
+            storageClass: openebs-hostpath
+        trivy:
+          storageClass: openebs-hostpath
+      imageChartStorage:
+        type: s3
+        s3:
+          region: us-east
+          regionendpoint: http://rgw.ucp
+          encrypt: ""
+          keyid: ""
+          secure: false
+          skipverify: ""
+          v4auth: ""
+          chunksize: ""
+          rootdirectory: ""
+          storageClass: ""
+          sse: ""
+    tracing:
+      enabled: true
+      otel:
+        enabled: true
+        endpoint: "tempo-grafana-tempo-ingester.observability:3200"
+        urlpath: "/v1/traces"
+        compression: false
+        timeout: 10s
+        insecure: true
+    registry:
+      existingSecret: ""
+    trivy:
+      enabled: true
+      vulnType: 'os,library'
+      severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true

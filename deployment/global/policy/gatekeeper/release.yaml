@@ -25,9 +25,10 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: gatekeeper
+        namespace: sre
       version: 3.12.0
   install:
-    crds: Create
+    crds: CreateReplace
     createNamespace: true
     replace: true
   interval: 1m0s

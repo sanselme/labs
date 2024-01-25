@@ -21,6 +21,8 @@ IMAGES=(
   inception
 )
 
+# : "${BASE_IMAGE:=mcr.microsoft.com/devcontainers/base:dev-ubuntu}"
+: "${BASE_IMAGE:=ubuntu:20.04}"
 : "${DOCKERFILE_ROOT:=build/pkg/img}"
 : "${PLATFORM:=linux/amd64,linux/arm64}"
 : "${REPO:=ghcr.io/sanselme/labs}"
@@ -43,6 +45,7 @@ for image in "${IMAGES[@]}"; do
     --label "org.opencontainers.image.url=https://github.com/users/sanselme/packages/container/package/labs%2F${image}" \
     --label "org.opencontainers.image.version=${TAG}" \
     --platform "${PLATFORM}" \
+    --build-arg BASE_IMAGE="${BASE_IMAGE}" \
     --push \
     --tag "${IMG}":"${TAG}" \
     --tag "${IMG}":latest \

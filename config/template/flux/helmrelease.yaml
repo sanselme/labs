@@ -1,0 +1,31 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: HELMRELEASE_NAME
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: HELMRELEASE_CHART_NAME
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: SOURCE_NAME
+      version: HELMRELEASE_CHART_VERSION
+  install:
+    crds: CreateReplace
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  upgrade:
+    crds: CreateReplace
+  #postRenderers:
+  #  - kustomize:
+  #      images:
+  #        - name: HELMRELEASE_IMAGE_NAME
+  #          newTag: HELMRELEASE_IMAGE_TAG
+  #dependsOn:
+  #  - name: HELMRELEASE_DEPENDENCY_NAME
+  #    namespace: flux-system
+  values: {}

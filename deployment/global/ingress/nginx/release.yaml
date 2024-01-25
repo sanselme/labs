@@ -20,15 +20,15 @@ metadata:
 spec:
   chart:
     spec:
-      chart: bintnami/nginx-ingress-controller
+      chart: nginxinc/charts/nginx-gateway-fabric
       reconcileStrategy: ChartVersion
       sourceRef:
         kind: HelmRepository
-        name: docker
+        name: github
         namespace: sre
-      version: 9.7.7
+      version: 1.0.0
   install:
-    crds: Create
+    crds: CreateReplace
     createNamespace: true
     replace: true
   interval: 1m0s
@@ -36,6 +36,4 @@ spec:
     crds: CreateReplace
   postRenderers:
     - kustomize:
-        images:
-          - name: docker.io/bitnami/nginx
-          - name: docker.io/bitnami/nginx-ingress-controller
+        images: []

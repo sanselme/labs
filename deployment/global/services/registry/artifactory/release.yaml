@@ -25,9 +25,9 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: artifactory
-      version: 107.63.5
+      version: 107.68.14
   install:
-    crds: Create
+    crds: CreateReplace
     createNamespace: true
     replace: true
   interval: 1m0s

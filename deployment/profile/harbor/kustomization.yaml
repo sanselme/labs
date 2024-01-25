@@ -16,6 +16,12 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ldap
-  - pinniped
-  - vault
+  - ../../stack/core/observability/dashboard
+
+  - ../../stack/iam/addons/authentik
+  - ../../stack/iam/addons/supervisor
+  - ../../stack/ucp/addons/maas
+
+  - capi
+patches:
+  - path: patch/authentik.yaml

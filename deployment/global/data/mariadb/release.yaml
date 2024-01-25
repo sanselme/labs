@@ -12,23 +12,23 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: mariadb-operator
+  name: mariadb
 spec:
   chart:
     spec:
-      chart: mariadb-operator
+      chart: bitnamicharts/mariadb
       reconcileStrategy: ChartVersion
       sourceRef:
         kind: HelmRepository
-        name: mariadb-operator
-      version: 0.21.0
+        name: docker
+        namespace: sre
+      version: 14.1.1
   install:
-    crds: Create
+    crds: CreateReplace
     createNamespace: true
     replace: true
   interval: 1m0s

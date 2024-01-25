@@ -25,9 +25,10 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: goauthentik
-      version: 2023.6.3
+        namespace: sre
+      version: 2023.10.2
   install:
-    crds: Create
+    crds: CreateReplace
     createNamespace: true
     replace: true
   interval: 1m0s

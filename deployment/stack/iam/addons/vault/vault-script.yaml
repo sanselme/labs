@@ -1,0 +1,169 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-script
+  namespace: iam
+data:
+  vault-unseal.sh: |-
+    #!/bin/bash
+    set -e
+
+    # init vault
+    initialize() {
+      echo 'initializing vault...'
+
+      vault operator init \
+        -tls-skip-verify \
+        -key-shares=10 \
+        -key-threshold=3 \
+        -format=json > /bitnami/vault/data/vault-credentials.json
+    }
+
+    # unseal vault
+    unseal() {
+      echo 'unsealing vault...'
+
+      UNSEAL_KEY_1="$(cat /bitnami/vault/data/vault-credentials.json | tail -n +3 | head -n 1 | tr -d ',' | tr -d '"')"
+      UNSEAL_KEY_2="$(cat /bitnami/vault/data/vault-credentials.json | tail -n +4 | head -n 1 | tr -d ',' | tr -d '"')"
+      UNSEAL_KEY_3="$(cat /bitnami/vault/data/vault-credentials.json | tail -n +5 | head -n 1 | tr -d ',' | tr -d '"')"
+
+      vault operator unseal "${UNSEAL_KEY_1}"
+      vault operator unseal "${UNSEAL_KEY_2}"
+      vault operator unseal "${UNSEAL_KEY_3}"
+    }
+
+    # login vault
+    login() {
+      echo 'logging into vault...'
+
+      ROOT_TOKEN="$(cat /bitnami/vault/data/vault-credentials.json | awk '/root_token/ { print $2 }' | tr -d ',' | tr -d '"')"
+      vault login "${ROOT_TOKEN}"
+    }
+
+    # save vault credentials
+    save() {
+      echo 'saving vault credentials...'
+
+      vault kv put kv/vault-credentials \
+        root_token="${ROOT_TOKEN}" \
+        unseal_key_1="${UNSEAL_KEY_1}" \
+        unseal_key_2="${UNSEAL_KEY_2}" \
+        unseal_key_3="${UNSEAL_KEY_3}" \
+        vault_credentials_json="$(cat /bitnami/vault/data/vault-credentials.json)"
+    }
+
+    INIT_STATUS=$(vault status | awk '/Initialized/ { print $2 }' | tr -d ',' | tr -d '"')
+    SEAL_STATUS=$(vault status | awk '/Sealed/ { print $2 }' | tr -d ',' | tr -d '"')
+
+    [[ "${INIT_STATUS}" == 'false' ]] && initialize
+    [[ "${SEAL_STATUS}" == 'true' ]] && unseal
+
+    login
+
+    VAULT_KV_STATUS=$(vault secrets list | awk /kv/)
+    [[ -z "${VAULT_KV_STATUS}" ]] && vault secrets enable -version=2 kv
+
+    VAULT_KV_SECRET_STATUS=$(vault kv list kv/ | awk /vault-credentials/)
+    [[ -z "${VAULT_KV_SECRET_STATUS}" ]] && save
+
+    echo 'vault initialized and unsealed'
+    exit 0
+  vault-policy.sh: |-
+    #!/bin/bash
+    set -e
+
+    # add policies
+    vault policy write admins /bitnami/vault/home/userconfig/admins.hcl
+    vault policy write oidc-auth /bitnami/vault/home/userconfig/oidc-auth.hcl
+    vault policy write oidc-admin /bitnami/vault/home/userconfig/oidc-admin.hcl
+  vault-userpass.sh: |-
+    #!/bin/bash
+    set -e
+
+    # enable userpass auth method
+    vault auth enable userpass || true
+
+    # TODO: create admins group
+    # TODO: create admins group
+    # FIXME: create admin user and add to admins group
+    # vault write auth/userpass/admins/admin \
+    #   password=${PASSWORD:-changeme} \
+    #   policies=admins
+  vault-ldap.sh: |-
+    #!/bin/bash
+    set -e
+
+    # TODO: add ldap as auth method
+    # TODO: configure ldap auth method
+  vault-oidc.sh: |-
+    #!/bin/bash
+    set -e
+
+    ENTITY_ID=$(vault read -field=id identity/entity/name/admin)
+    # vault write identity/group \
+    #   name=admins \
+    #   member_entity_ids="${ENTITY_ID}"
+    GROUP_ID="$(vault read -field=id identity/group/name/admins)"
+    USERPASS_ACCESSOR="$(vault auth list -detailed -format json | jq -r '.["userpass/"].accessor')"
+    vault write identity/entity-alias \
+      name=admin \
+      canonical_id="${ENTITY_ID}" \
+      mount_accessor="${USERPASS_ACCESSOR}"
+
+    vault write identity/oidc/assignment/default \
+      entity_ids="${ENTITY_ID}" \
+      group_ids="${GROUP_ID}"
+    vault write identity/oidc/key/default \
+      allowed_client_ids="*" \
+      verification_ttl=2h \
+      rotation_period=1h \
+      algorithm=RS256
+    vault write identity/oidc/client/pinniped \
+      redirect_uris=http://127.0.0.1:8080/v1/auth-methods/oidc/callback \
+      assignments=default \
+      key=default \
+      id_token_ttl=30m \
+      access_token_ttl=1h
+    CLIENT_ID="$(vault read -field=client_id identity/oidc/client/pinniped)"
+
+    USER_SCOPE_TEMPLATE='{
+        "username": {{identity.entity.name}},
+        "contact": {
+            "email": {{identity.entity.metadata.email}},
+            "phone_number": {{identity.entity.metadata.phone_number}}
+        }
+    }'
+    vault write identity/oidc/scope/user \
+      description="The user scope provides claims using Vault identity entity metadata" \
+      template="$(echo "${USER_SCOPE_TEMPLATE}" | base64 -)"
+    GROUPS_SCOPE_TEMPLATE='{
+        "groups": {{identity.entity.groups.names}}
+    }'
+    vault write identity/oidc/scope/groups \
+      description="The groups scope provides the groups claim using Vault group membership" \
+      template="$(echo "${GROUPS_SCOPE_TEMPLATE}" | base64 -)"
+    vault write identity/oidc/provider/vault \
+      allowed_client_ids="${CLIENT_ID}" \
+      scopes_supported="groups,user"
+  vault-approle.sh: |-
+    #!/bin/bash
+    set -e
+
+    # TODO: enable approle auth method
+    # TODO: approle for ceph
+    # TODO: approle for kasten

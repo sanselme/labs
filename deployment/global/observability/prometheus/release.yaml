@@ -26,9 +26,9 @@ spec:
         kind: HelmRepository
         name: docker
         namespace: sre
-      version: 8.16.1
+      version: 8.22.0
   install:
-    crds: Create
+    crds: CreateReplace
     createNamespace: true
     replace: true
   interval: 1m0s

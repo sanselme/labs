@@ -16,8 +16,6 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 set -e
 
-source scripts/load-env.sh
-
 # create kind cluster
 create_kind_config false
 create_kind_cluster "${CLUSTER_NAME}" "${CONFIG_FILE}" true

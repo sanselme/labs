@@ -26,9 +26,9 @@ spec:
         kind: HelmRepository
         name: docker
         namespace: sre
-      version: 0.2.7
+      version: 0.4.0
   install:
-    crds: Create
+    crds: CreateReplace
     createNamespace: true
     replace: true
   interval: 1m0s
@@ -38,6 +38,6 @@ spec:
     - kustomize:
         images:
           - name: docker.io/bitnami/os-shell
-          - name: docker.io/bitnami/vault
-          - name: docker.io/bitnami/vault-csi-provider
-          - name: docker.io/bitnami/vault-k8s
+          - name: docker.io/hashicorp/vault
+          - name: docker.io/hashicorp/vault-csi-provider
+          - name: docker.io/hashicorp/vault-k8s

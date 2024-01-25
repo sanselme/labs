@@ -1,0 +1,521 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: capi
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: cert-manager
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: cicd
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: gatekeeper-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: iam
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: observability
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: openebs
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: openstack
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: operators
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: rook-ceph
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: sre
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: tenant
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline
+  name: ucp
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: default-ca-issuer
+spec:
+  acme:
+    email: admin@labsonline.ca
+    privateKeySecretRef:
+      name: default-issuer-account-key
+    server: https://acme-v02.api.letsencrypt.org/directory
+    solvers:
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            key: cloudflare_api_token
+            name: cloudflare-creds
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: cilium
+  namespace: kube-system
+spec:
+  chart:
+    spec:
+      chart: cilium
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: cilium
+      version: 1.14.3
+  dependsOn:
+  - name: cilium-ca-issuer
+  - name: prometheus
+    namespace: observability
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  postRenderers:
+  - kustomize:
+      images:
+      - name: quay.io/cilium/certgen
+      - name: quay.io/cilium/cilium
+      - name: quay.io/cilium/cilium-envoy
+      - name: quay.io/cilium/cilium-etcd-operator
+      - name: quay.io/cilium/clustermesh-apiserver
+      - name: quay.io/cilium/hubble-relay
+      - name: quay.io/cilium/hubble-ui
+      - name: quay.io/cilium/hubble-ui-backend
+      - name: quay.io/cilium/kvstoremesh
+      - name: quay.io/cilium/operator
+      - name: quay.io/cilium/startup-script
+      - name: quay.io/coreos/etcd
+  upgrade:
+    crds: CreateReplace
+  values:
+    bandwidthManager:
+      bbr: false
+    bgpControlPlane:
+      enabled: true
+    dashboards:
+      enabled: true
+      namespace: observability
+    encryption:
+      enabled: false
+      type: wireguard
+    externalIPs:
+      enabled: true
+    gatewayAPI:
+      enabled: true
+      secretsNamespace:
+        create: false
+        name: kube-system
+    hostFirewall:
+      enabled: true
+    hubble:
+      metrics:
+        dashboards:
+          enabled: true
+          namespace: observability
+        enableOpenMetrics: true
+        enabled:
+        - dns:query;ignoreAAAA
+        - drop
+        - tcp
+        - flow
+        - icmp
+        - http
+        serviceMonitor:
+          enabled: true
+      relay:
+        enabled: false
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+      tls:
+        auto:
+          certManagerIssuerRef:
+            group: cert-manager.io
+            kind: Issuer
+            name: cilium-ca-issuer
+          method: certmanager
+      ui:
+        enabled: false
+    ingressController:
+      enabled: true
+      enforceHttps: true
+    l2announcements:
+      enabled: true
+      leaseDuration: 3s
+      leaseRenewDeadline: 1s
+      leaseRetryPeriod: 500ms
+    loadBalancer:
+      algorithm: maglev
+      l7:
+        backend: envoy
+      serviceTopology: true
+    monitor:
+      enabled: true
+    operator:
+      dashboards:
+        enabled: true
+        namespace: observability
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+    pmtuDiscovery:
+      enabled: true
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        trustCRDsExist: true
+    proxy:
+      prometheus:
+        enabled: true
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: cilium-ca-issuer
+  namespace: kube-system
+spec:
+  chart:
+    spec:
+      chart: sanselme/ca-issuer
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: docker
+        namespace: sre
+      version: 0.2.2
+  dependsOn:
+  - name: cert-manager
+    namespace: cert-manager
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  upgrade:
+    crds: CreateReplace
+  values:
+    conf:
+      ca:
+        issuer:
+          name: cilium-ca-issuer
+        secret:
+          name: cilium-ca-key-pair
+    manifests:
+      secret_ca: false
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: metrics-server
+  namespace: kube-system
+spec:
+  chart:
+    spec:
+      chart: bitnamicharts/metrics-server
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: docker
+        namespace: sre
+      version: 6.4.5
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  postRenderers:
+  - kustomize:
+      images:
+      - name: docker.io/bitnami/metrics-server
+  upgrade:
+    crds: CreateReplace
+  values:
+    containerPorts:
+      https: 10250
+    extraArgs:
+    - --cert-dir=/tmp
+    - --kubelet-insecure-tls=true
+    - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+    - --kubelet-use-node-status-port
+    - --metric-resolution=50s
+    - --secure-port=10250
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: prometheus
+  namespace: observability
+spec:
+  chart:
+    spec:
+      chart: bitnamicharts/kube-prometheus
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: docker
+        namespace: sre
+      version: 8.16.1
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  postRenderers:
+  - kustomize:
+      images:
+      - name: docker.io/bitnami/alertmanager
+      - name: docker.io/bitnami/blackbox-exporter
+      - name: docker.io/bitnami/prometheus
+      - name: docker.io/bitnami/prometheus-operator
+      - name: docker.io/bitnami/thanos
+  upgrade:
+    crds: CreateReplace
+  values:
+    alertmanager:
+      externalUrl: ""
+      persistence:
+        enabled: false
+      resources: {}
+    blackboxExporter:
+      resources:
+        limits: {}
+        requests: {}
+    global:
+      storageClass: ceph-rbd
+    operator:
+      configReloaderResources: {}
+      resources: {}
+    prometheus:
+      configReloader:
+        service:
+          enabled: false
+        serviceMonitor:
+          enabled: true
+      enableAdminAPI: false
+      externalUrl: ""
+      persistence:
+        enabled: false
+      resources: {}
+      thanos:
+        create: false
+        prometheusUrl: ""
+        resources:
+          limits: {}
+          requests: {}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: promtail
+  namespace: observability
+spec:
+  chart:
+    spec:
+      chart: bitnamicharts/promtail
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: docker
+        namespace: sre
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  postRenderers:
+  - kustomize:
+      images: []
+  upgrade:
+    crds: CreateReplace
+  values: {}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: openebs
+  namespace: openebs
+spec:
+  chart:
+    spec:
+      chart: openebs
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: openebs
+      version: 3.8.0
+  install:
+    crds: Create
+    createNamespace: true
+    replace: true
+  interval: 1m0s
+  postRenderers:
+  - kustomize:
+      images: []
+  upgrade:
+    crds: CreateReplace
+  values:
+    analytics:
+      enabled: false
+    localprovisioner:
+      hostpathClass:
+        enabled: true
+        isDefaultClass: true
+    ndm:
+      enabled: false
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: csi-snapshotter
+  namespace: gatekeeper-system
+spec:
+  images:
+  - name: registry.k8s.io/sig-storage/snapshot-controller
+    newTag: v6.2.2
+  interval: 1m0s
+  path: deploy/kubernetes/csi-snapshotter
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: kcsi
+  targetNamespace: kube-system
+  timeout: 2m0s
+  wait: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: csi-snapshotter-controller
+  namespace: gatekeeper-system
+spec:
+  images:
+  - name: registry.k8s.io/sig-storage/csi-provisioner
+    newTag: v3.5.0
+  - name: registry.k8s.io/sig-storage/csi-snapshotter
+    newTag: v6.2.2
+  - name: registry.k8s.io/sig-storage/hostpathplugin
+  interval: 1m0s
+  path: deploy/kubernetes/snapshot-controller
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: kcsi
+  timeout: 2m0s
+  wait: true
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: kcsi
+  namespace: gatekeeper-system
+spec:
+  interval: 1m0s
+  ref:
+    tag: v6.2.2
+  url: https://github.com/kubernetes-csi/external-snapshotter.git
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: cilium
+  namespace: kube-system
+spec:
+  interval: 1m0s
+  url: https://helm.cilium.io/
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: openebs
+  namespace: openebs
+spec:
+  interval: 1m0s
+  url: https://openebs.github.io/charts/

@@ -19,7 +19,6 @@ images:
   - name: gcr.io/kubebuilder/kube-rbac-proxy
   - name: quay.io/csiaddons/k8s-controller
 resources:
-  - https://github.com/csi-addons/kubernetes-csi-addons/releases/download/v0.7.0/crds.yaml
   - https://github.com/csi-addons/kubernetes-csi-addons/releases/download/v0.7.0/csi-addons-config.yaml
   - https://github.com/csi-addons/kubernetes-csi-addons/releases/download/v0.7.0/setup-controller.yaml
   - rbac.yaml

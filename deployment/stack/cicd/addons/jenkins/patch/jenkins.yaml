@@ -1,0 +1,28 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: jenkins
+spec:
+  dependsOn:
+    - name: openebs
+      namespace: kube-system
+  values:
+    jenkinsUser: admin
+    plugins:
+      - configuration-as-code:1569.vb_72405b_80249
+      - git:4.13.0
+      - kubernetes:3852.v41ea_166a_ed1b_
+      - oic-auth:2.6
+      - workflow-aggregator:590.v6a_d052e5a_a_b_5
+    configAsCode:
+      enabled: true
+      autoReload:
+        enabled: true
+    agent:
+      enabled: true
+    agentListenerService:
+      enabled: true
+    persistence:
+      enabled: true
+      storageClass: openebs-hostpath

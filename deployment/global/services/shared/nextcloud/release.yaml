@@ -27,7 +27,7 @@ spec:
         name: nextcloud
       version: 3.5.19
   install:
-    crds: Create
+    crds: CreateReplace
     createNamespace: true
     replace: true
   interval: 1m0s

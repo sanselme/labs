@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
+set -e
 
 DEFAULT_EXTENSION_LIST=(
   "aaron-bond.better-comments"
@@ -32,17 +33,42 @@ DEFAULT_EXTENSION_LIST=(
   "ms-vscode.vscode-serial-monitor"
   "patbenatar.advanced-new-file"
   "redhat.vscode-yaml"
-  "shd101wyy.markdown-preview-enhanced"
   "trunk.io"
   "vscode-icons-team.vscode-icons"
   "wayou.vscode-todo-highlight"
 )
 
-# Install extensions execpt tunk.io for windows
+INSTALL_RECOMMENDATIONS=false
+[[ ${1} == "--recommendations" ]] && INSTALL_RECOMMENDATIONS=true
+
+# Install extensions except tunk.io for Windows
 for extension in "${DEFAULT_EXTENSION_LIST[@]}"; do
-  if [[ ${OSTYPE} == "msys" && ${extension} == "trunk.io" ]]; then
+  [[ ${OSTYPE} == "msys" && ${extension} == "trunk.io" ]] && {
     continue
-  fi
+  }
 
   code --install-extension "${extension}"
 done
+
+# Install recommendations if any
+[[ -n ${INSTALL_RECOMMENDATIONS} ]] && {
+  recommendations_list=$(jq -r '.recommendations' .vscode/extensions.json)
+  [[ ${recommendations_list} == "[]" ]] && {
+    echo "No recommendations to install"
+    exit 0
+  }
+
+  for extension in $(jq -r '.[]' "${recommendations_list}"); do
+    code --install-extension "${extension}"
+  done
+}
+
+# copy zshrc
+cp -f hack/zshrc ~/.zshrc
+
+# Install k0s
+K0S=$(command -v k0s)
+[[ -z ${K0S} ]] && {
+  # trunk-ignore(shellcheck/SC2312)
+  curl -sSLf https://get.k0s.sh | sh
+}

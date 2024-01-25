@@ -1,0 +1,131 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: ClusterClass
+metadata:
+  name: capi-bm-kubeadm
+spec:
+  controlPlane:
+    namingStrategy:
+      template: "capi-{{ .cluster.name }}-{{ .random }}"
+    ref:
+      apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+      kind: KubeadmControlPlaneTemplate
+      name: kubeadm-control-plane
+    machineInfrastructure:
+      ref:
+        kind: ByoMachineTemplate
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        name: byoh-control-plane
+  infrastructure:
+    ref:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      kind: ByoClusterTemplate
+      name: byoh
+  workers:
+    # machinePools:
+    #   - class: kubeadm-worker
+    #     namingStrategy:
+    #       template: "capi-{{ .cluster.name }}-{{ .machinePool.topologyName }}-{{ .random }}"
+    machineDeployments:
+      - class: vm-cruiser-worker
+        namingStrategy:
+          template: "capi-{{ .cluster.name }}-{{ .machineDeployment.topologyName }}-{{ .random }}"
+        template:
+          bootstrap:
+            ref:
+              apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+              kind: KubeadmConfigTemplate
+              name: kubeadm-worker-bootstrap-template
+          infrastructure:
+            ref:
+              apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+              kind: ByoMachineTemplate
+              name: byoh-worker-machinetemplate
+  variables:
+    - name: bundleLookupBaseRegistry
+      required: false
+      schema:
+        openAPIV3Schema:
+          type: string
+          default: https://projects.registry.vmware.com/cluster_api_provider_bringyourownhost
+          description: |
+            The base registry to use for bundle lookup. This is used to find the
+            bundle for the control plane and worker nodes. The default is the
+            VMware registry.
+    - name: controlPlaneIpAddr
+      required: true
+      schema:
+        openAPIV3Schema:
+          type: string
+          description: The IP address of the control plane.
+    - name: enableKubeVip
+      required: false
+      schema:
+        openAPIV3Schema:
+          type: boolean
+          default: false
+          description: |
+            Whether to enable kube-vip for the control plane. This is used to
+            provide a virtual IP address for the control plane.
+    - name: kubeVipPodManifest
+      required: true
+      schema:
+        openAPIV3Schema:
+          type: string
+          description: kube-vip manifest for the control plane.
+  patches:
+    - name: bundleLookupBaseRegistry
+      description: Sets the bundleLookupBaseRegistry used for the BYOCluster.
+      definitions:
+        - selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+            kind: ByoClusterTemplate
+            matchResources:
+              infrastructureCluster: true
+          jsonPatches:
+            - op: add
+              path: /spec/template/spec/bundleLookupBaseRegistry
+              valueFrom:
+                variable: bundleLookupBaseRegistry
+    - name: controlPlaneEndpoint
+      description: Sets control plane endpoint
+      definitions:
+        - selector:
+            apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+            kind: ByoClusterTemplate
+            matchResources:
+              infrastructureCluster: true
+          jsonPatches:
+            - op: add
+              path: /spec/template/spec/controlPlaneEndpoint
+              valueFrom:
+                template: |
+                  host: "{{ .controlPlaneIpAddr }}"
+                  port: 6443
+    - name: kubeVipEnabled
+      # enabledIf: "{{ .enableKubeVip }}"
+      definitions:
+        - jsonPatches:
+            - op: add
+              path: /spec/template/spec/kubeadmConfigSpec/files/0/content
+              valueFrom:
+                variable: kubeVipPodManifest
+          selector:
+            apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+            kind: KubeadmControlPlaneTemplate
+            matchResources:
+              controlPlane: true

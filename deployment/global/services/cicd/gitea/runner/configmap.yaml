@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitea-runner-config
+  namespace: cicd
+  labels:
+    app.kubernetes.io/instance: gitea-runner
+    app.kubernetes.io/name: gitea-runner

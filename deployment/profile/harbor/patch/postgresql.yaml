@@ -1,0 +1,66 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: postgresql
+spec:
+  dependsOn:
+    - name: openebs
+      namespace: kube-system
+    - name: prometheus
+      namespace: observability
+  values:
+    global:
+      storageClass: openebs-hostpath
+    auth:
+      enablePostgresUser: true
+      postgresPassword: 728cd4a6d1f77511
+      password: 6273a2cf7e517f3a
+      replicationUsername: repl_user
+      replicationPassword: 4e159ef560feb3af
+      existingSecret: ""
+      secretKeys:
+        adminPasswordKey: postgres-password
+        userPasswordKey: password
+        replicationPasswordKey: replication-password
+    architecture: replication
+    audit:
+      logHostname: false
+      logConnections: false
+      logDisconnections: false
+      pgAuditLog: ""
+      pgAuditLogCatalog: "off"
+      clientMinMessages: error
+      logLinePrefix: ""
+      logTimezone: ""
+    tls:
+      enabled: false
+      certificatesSecret: ""
+      certFilename: ""
+      certKeyFilename: ""
+      certCAFilename: ""
+    primary:
+      existingConfigmap: ""
+      standby:
+        enabled: false
+        primaryHost: ""
+        primaryPort: ""
+    readReplicas:
+      replicaCount: 1
+    backup:
+      enabled: false
+    serviceBindings:
+      enabled: false
+      serviceMonitor:
+        enabled: true
+      prometheusRule:
+        enabled: true
+        rules:
+          - alert: HugeReplicationLag
+            expr: pg_replication_lag{service="{{ printf "%s-metrics" (include "common.names.fullname" .) }}"} / 3600 > 1
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              description: replication for {{ include "common.names.fullname" . }} PostgreSQL is lagging by {{ "{{ $value }}" }} hour(s).
+              summary: PostgreSQL replication is lagging by {{ "{{ $value }}" }} hour(s).

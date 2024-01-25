@@ -16,8 +16,6 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 set -e
 
-source scripts/load-env.sh
-
 # generate workload config
 kustomize build deployment/site/sandbox >"hack/${CLUSTER_NAME}.yaml"
 kustomize build deployment/site/sandbox/network >"hack/${CLUSTER_NAME}-network.yaml"

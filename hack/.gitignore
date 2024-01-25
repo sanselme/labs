@@ -8,3 +8,5 @@
 !boilerplate.txt
 !docker/docker-compose.yaml
 !pkg.txt
+!samples/
+!samples/*

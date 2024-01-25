@@ -1,0 +1,74 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: redis
+spec:
+  dependsOn:
+    - name: openebs
+      namespace: kube-system
+    - name: prometheus
+      namespace: observability
+  values:
+    architecture: replication
+    auth:
+      enabled: true
+      sentinel: true
+      password: e5a539e8c2354d81
+      existingSecret:
+      existingSecretPasswordKey:
+    existingConfigmap: ""
+    master:
+      persistence:
+        enabled: true
+        storageClass: ""
+    replica:
+      replicaCount: 3
+      externalMaster:
+        enabled: false
+        host: ""
+        port: 6379
+      persistence:
+        enabled: true
+        storageClass: ""
+    sentinel:
+      enabled: true
+      masterSet: mymaster
+      quorum: 2
+      externalMaster:
+        enabled: false
+        host: ""
+        port: 6379
+      persistence:
+        enabled: false
+        storageClass: ""
+    serviceBindings:
+      enabled: false
+    tls:
+      enabled: false
+      existingSecret: ""
+      certFilename: ""
+      certKeyFilename: ""
+      certCAFilename: ""
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+      podMonitor:
+        enabled: true
+      prometheusRule:
+        enabled: true
+        rules:
+          - alert: RedisDown
+            expr: redis_up{service="{{ template "common.names.fullname" . }}-metrics"} == 0
+            for: 2m
+            labels:
+              severity: error
+            annotations:
+              summary: Redis&reg; instance {{ "{{ $labels.instance }}" }} down
+              description: Redis&reg; instance {{ "{{ $labels.instance }}" }} is down
+    useExternalDNS:
+      enabled: false
+      suffix: ""
+      annotationKey: external-dns.alpha.kubernetes.io/
+      additionalAnnotations: {}

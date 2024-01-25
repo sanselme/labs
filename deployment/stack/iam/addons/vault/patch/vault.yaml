@@ -1,0 +1,106 @@
+# Copyright (c) 2023 Schubert Anselme <schubert@anselm.es>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: vault
+spec:
+  dependsOn:
+    - name: openebs
+      namespace: kube-system
+    - name: prometheus
+      namespace: observability
+  values:
+    global:
+      tlsDisable: false
+      serverTelemetry:
+        prometheusOperator: true
+    server:
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 250m
+        limits:
+          memory: 256Mi
+          cpu: 250m
+      extraInitContainers: []
+      # - name: vault-config
+      #   image: docker.io/bitnami/vault:1.15.0-debian-11-r8
+      #   imagePullPolicy: IfNotPresent
+      #   command:
+      #     - /bin/sh
+      #     - -c
+      #   args:
+      #     - /vault/userconfig/scripts/vault-policy.sh
+      #     - /vault/userconfig/scripts/vault-userpass.sh
+      #     - /vault/userconfig/scripts/vault-oidc.sh
+      #   volumeMounts:
+      #     - mountPath: /vault/userconfig/scripts
+      #       name: vault-script
+      #       readOnly: true
+      #     - mountPath: /vault/userconfig/config
+      #       name: vault-userconfig
+      #       readOnly: true
+      postStart:
+        - /bin/sh
+        - -c
+        - /vault/userconfig/scripts/vault-unseal.sh
+      # extraEnvironmentVars:
+      #   GOOGLE_REGION: global
+      #   GOOGLE_PROJECT: myproject
+      #   GOOGLE_APPLICATION_CREDENTIALS: /vault/userconfig/myproject/myproject-creds.json
+      # extraSecretEnvironmentVars:
+      #   - envName: PASSWORD
+      #     secretName: vault-creds
+      #     secretKey: PASSWORD
+      volumes:
+        - name: vault-userconfig
+          configMap:
+            name: vault-userconfig
+            defaultMode: 0644
+        - name: vault-script
+          configMap:
+            name: vault-script
+            defaultMode: 0755
+      volumeMounts:
+        - mountPath: /vault/userconfig/scripts
+          name: vault-script
+          readOnly: true
+        - mountPath: /vault/userconfig/config
+          name: vault-userconfig
+          readOnly: true
+      dataStorage:
+        storageClass: openebs-hostpath
+    serverTelemetry:
+      serviceMonitor:
+        enabled: true
+      prometheusRules:
+          enabled: true
+          rules:
+            - alert: vault-HighResponseTime
+              annotations:
+                message: The response time of Vault is over 500ms on average over the last 5 minutes.
+              expr: vault_core_handle_request{quantile="0.5", namespace="mynamespace"} > 500
+              for: 5m
+              labels:
+                severity: warning
+            - alert: vault-HighResponseTime
+              annotations:
+                message: The response time of Vault is over 1s on average over the last 5 minutes.
+              expr: vault_core_handle_request{quantile="0.5", namespace="mynamespace"} > 1000
+              for: 5m
+              labels:
+                severity: critical

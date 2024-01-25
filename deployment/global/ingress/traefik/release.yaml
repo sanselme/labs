@@ -27,7 +27,7 @@ spec:
         name: traefik
       version: 22.1.0
   install:
-    crds: Create
+    crds: CreateReplace
     createNamespace: true
     replace: true
   interval: 1m0s

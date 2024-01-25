@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 set -e
-source scripts/load-env.sh
 
 # get private key from onepassword
 scripts/onepassword/op-get-file.sh "${SEC_KEY}" "${SEC_KEY_OP_TITLE}" .sops.asc

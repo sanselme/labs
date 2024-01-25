@@ -18,18 +18,27 @@
 TARGET_CLUSTER_NAME="${1}"
 [[ -z ${TARGET_CLUSTER_NAME} ]] && echo "Usage: $0 <target-cluster-name>" && exit 1
 
+export NS="${2:-default}"
+
+DESTINATION="build/site/${TARGET_CLUSTER_NAME}"
+BOOTSTRAP_KUBECONFIG_CONF="${3:-${DESTINATION}/bootstrap-kubeconfig.conf}"
+BOOTSTRAP_KUBECONFIG_YAML="${3:-${DESTINATION}/bootstrapkubeconfig.yaml}"
+
 # generate bootstrap-kubeconfig.yaml & apply it to mgmt cluster
-cp -f deployment/global/capi/template/bootstrapkubeconfig.yaml hack/multipass/bootstrap-kubeconfig.yaml
+cp -f deployment/global/capi/template/bootstrapkubeconfig.yaml "${BOOTSTRAP_KUBECONFIG_YAML}"
 
-yq -i 'del(.spec.insecure-skip-tls-verify)' hack/multipass/bootstrap-kubeconfig.yaml
-yq -i '.spec.apiserver = env(APISERVER)' hack/multipass/bootstrap-kubeconfig.yaml
-yq -i '.spec.certificate-authority-data = env(CA_CERT)' hack/multipass/bootstrap-kubeconfig.yaml
+NAME="bootstrap-${TARGET_CLUSTER_NAME}" yq -i '.metadata.name = env(NAME)' "${BOOTSTRAP_KUBECONFIG_YAML}"
+yq -i 'del(.spec.insecure-skip-tls-verify)' "${BOOTSTRAP_KUBECONFIG_YAML}"
+yq -i '.spec.apiserver = env(APISERVER)' "${BOOTSTRAP_KUBECONFIG_YAML}"
+yq -i '.metadata.namespace = env(NS)' "${BOOTSTRAP_KUBECONFIG_YAML}"
+yq -i '.spec.certificate-authority-data = env(CA_CERT)' "${BOOTSTRAP_KUBECONFIG_YAML}"
 
-kubectl apply -f hack/multipass/bootstrap-kubeconfig.yaml
+kubectl create namespace "${NS}" --dry-run=client -o=yaml | kubectl apply -f -
+kubectl apply -n "${NS}" -f "${BOOTSTRAP_KUBECONFIG_YAML}"
 
-# generate bootstrap-kubeconfig.conf
-sleep 30
-kubectl get bootstrapkubeconfig bootstrap-kubeconfig \
-  -n default \
+# FIXME: generate bootstrap-kubeconfig.conf
+sleep 15
+kubectl get bootstrapkubeconfig "bootstrap-${CLUSTER_NAME}" \
+  -n "${NS}" \
   -o=jsonpath='{.status.bootstrapKubeconfigData}' \
-  >"${BOOTSTRAP_KUBECONFIG_FILE:-$2}"
+  >"${BOOTSTRAP_KUBECONFIG_CONF}"
